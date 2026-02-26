@@ -1639,7 +1639,7 @@ function Investissement({user,setUser,projets,setProjets,toast}){
                 </div>
               )}
               <div className="info-box info-gold mt2 t-xs">
-                ⚠ Investissement à risque. Les rendements affichés sont estimatifs. Lisez la description complète du projet avant d'investir.
+                ⚠ Investissement à risque. Les rendements affichés sont estimatifs. Lisez la description complète du projet avant d’investir.
               </div>
             </div>
           </div>
@@ -1659,7 +1659,7 @@ function Admin({user,tontines,setTontines,toast}){
   if(!miens.length)return(
     <div>
       <div className="ph"><div className="ph-tag">Administration</div><div className="ph-title">Espace admin</div></div>
-      <div className="content"><div className="empty"><div className="empty-ic">👑</div><div className="empty-t">Aucune tontine à administrer</div><div className="empty-s">Créez une tontine dans l'onglet Tontines pour accéder à l'espace admin.</div></div></div>
+      <div className="content"><div className="empty"><div className="empty-ic">👑</div><div className="empty-t">Aucune tontine à administrer</div><div className="empty-s">Créez une tontine dans l'onglet Tontines pour accéder à l’espace admin.</div></div></div>
     </div>
   );
   return(
@@ -2042,7 +2042,7 @@ function Marche({user, toast}) {
           {mesAnnonces.length===0 ? (
             <div className="card" style={{textAlign:'center',padding:'2rem',color:'var(--ink3)'}}>
               <div style={{fontSize:'2rem',marginBottom:'.5rem'}}>📋</div>
-              <div>Vous n'avez pas encore d'annonce</div>
+              <div>Vous n’avez pas encore d’annonce</div>
               <button className="btn btn-lime btn-sm" style={{marginTop:'1rem'}} onClick={()=>setModal('creer')}>Publier ma première annonce</button>
             </div>
           ) : mesAnnonces.map(a=>{
@@ -2321,10 +2321,10 @@ const CALENDRIER = {
     {culture:'Arachide de contre-saison', semis:'Février–Mars', recolte:'Juin',    regions:['Dakar','Thiès','Fatick'],                                  conseil:`Nécessite irrigation. Variété Fleur 11. Rentable si irrigation disponible.`},
   ],
   elevage: [
-    {culture:'Bovins (vêlage)',    semis:`Saison sèche (Nov-Fév)`,  recolte:`Toute l'année`, regions:['Louga','Saint-Louis','Tambacounda','Matam'], conseil:`Suivi vétérinaire mensuel. Vaccination FVR en octobre.`},
-    {culture:'Ovins (agnelage)',   semis:`Toute l'année`,           recolte:`Avant Tabaski`, regions:['Toutes régions'],                            conseil:`Engraissement 3 mois avant Tabaski. Aliment composé + paille.`},
-    {culture:'Volaille (poulet)',  semis:`Toute l'année`,           recolte:`J+45 (chair)`,  regions:['Toutes régions'],                            conseil:`Biosécurité stricte. Vaccination Newcastle à J8 et J21.`},
-    {culture:'Caprins (chevreau)', semis:'Octobre–Novembre',         recolte:`Toute l'année`,regions:['Kaolack','Diourbel','Fatick'],               conseil:`Résistants à la chaleur. Vermifugation bi-annuelle.`},
+    {culture:'Bovins (vêlage)',    semis:`Saison sèche (Nov-Fév)`,  recolte:`Toute l’année`, regions:['Louga','Saint-Louis','Tambacounda','Matam'], conseil:`Suivi vétérinaire mensuel. Vaccination FVR en octobre.`},
+    {culture:'Ovins (agnelage)',   semis:`Toute l’année`,           recolte:`Avant Tabaski`, regions:['Toutes régions'],                            conseil:`Engraissement 3 mois avant Tabaski. Aliment composé + paille.`},
+    {culture:'Volaille (poulet)',  semis:`Toute l’année`,           recolte:`J+45 (chair)`,  regions:['Toutes régions'],                            conseil:`Biosécurité stricte. Vaccination Newcastle à J8 et J21.`},
+    {culture:'Caprins (chevreau)', semis:'Octobre–Novembre',         recolte:`Toute l’année`,regions:['Kaolack','Diourbel','Fatick'],               conseil:`Résistants à la chaleur. Vermifugation bi-annuelle.`},
   ],
 };
 
@@ -2333,9 +2333,9 @@ const ALERTES_RAVAGEURS = [
   {nom:'Criquet pèlerin',    ic:'🦗', niveau:'élevé',  mois:['Août','Septembre','Octobre'], cultures:['Mil','Sorgho','Maïs','Riz'],   action:`Signaler immédiatement à la DAGPN (+221 33 849 70 00). Ne pas traiter seul.`},
   {nom:'Chenille légionnaire', ic:'🐛', niveau:'élevé', mois:['Juillet','Août','Septembre'],cultures:['Maïs','Mil','Sorgho'],         action:`Traitement Coragen ou Ampligo. Surveillance nocturne recommandée.`},
   {nom:'Pucerons arachide',  ic:'🪲', niveau:'moyen',  mois:['Août','Septembre'],            cultures:['Arachide'],                   action:`Pulvérisation Imidaclopride 200g/ha. Éviter les heures chaudes.`},
-  {nom:'Mildiou oignon',     ic:'🍄', niveau:'moyen',  mois:['Décembre','Janvier','Février'],cultures:['Oignon','Tomate'],            action:`Fongicide Mancozèbe. Éviter excès d`humidité. Rotation culturale.'},
+  {nom:'Mildiou oignon',     ic:'🍄', niveau:'moyen',  mois:['Décembre','Janvier','Février'],cultures:['Oignon','Tomate'],            action:`Fongicide Mancozèbe. Éviter excès d’humidité. Rotation culturale.'},
   {nom:'FMDV (Fièvre aphteuse)', ic:'🐄', niveau:'élevé', mois:['Novembre','Décembre'],     cultures:['Bovins','Ovins'],              action:`Vaccination annuelle obligatoire. Quarantaine 21 jours. Signaler à DIREL.`},
-  {nom:'Newcastle volaille', ic:'🐓', niveau:'élevé',  mois:['Toute l'année'],              cultures:['Volaille'],                   action:`Vaccination à J8, rappel J21. Biosécurité stricte. Mortalité 80% sans vaccin.`},
+  {nom:'Newcastle volaille', ic:'🐓', niveau:'élevé',  mois:[`Toute l’année`],              cultures:['Volaille'],                   action:`Vaccination à J8, rappel J21. Biosécurité stricte. Mortalité 80% sans vaccin.`},
 ];
 
 /* ── Données : Rendements de référence Sénégal ── */
@@ -2428,7 +2428,7 @@ function OutilsAgricoles({user, toast}) {
 
   // ── ALERTES ──────────────────────────────────────────
   const alertesMois = ALERTES_RAVAGEURS.filter(a=>
-    a.mois.includes(moisEnCours) || a.mois.includes('Toute l'année')
+    a.mois.includes(moisEnCours) || a.mois.includes('Toute l’année')
   );
 
   const prix = (n) => n ? Math.round(n).toLocaleString('fr-FR')+' FCFA' : '—';
@@ -2549,10 +2549,10 @@ function OutilsAgricoles({user, toast}) {
                     {resultat.roi>=50?'🌟 Excellente rentabilité':resultat.roi>=20?'✅ Bonne rentabilité':resultat.roi>=0?'⚠ Rentabilité faible':'❌ Déficitaire'}
                   </div>
                   <div style={{fontSize:'.83rem',color:'var(--ink3)',lineHeight:1.6}}>
-                    {resultat.roi>=50 && 'Votre exploitation est très rentable. Envisagez d'agrandir la superficie ou d'investir dans du matériel.'}
-                    {resultat.roi>=20 && resultat.roi<50 && 'Rentabilité correcte. Optimisez vos charges (groupement d'achats d'intrants) pour améliorer la marge.'}
-                    {resultat.roi>=0 && resultat.roi<20 && 'Marge faible. Cherchez à augmenter le prix de vente via le Marché Cadran ou réduire les intrants.'}
-                    {resultat.roi<0 && 'Attention, cette campagne est déficitaire selon vos estimations. Vérifiez vos charges ou le prix de vente cible.'}
+                    {resultat.roi>=50 && `Votre exploitation est très rentable. Envisagez d’agrandir la superficie ou d’investir dans du matériel.`}
+                    {resultat.roi>=20 && resultat.roi<50 && `Rentabilité correcte. Optimisez vos charges (groupement d’achats d’intrants) pour améliorer la marge.`}
+                    {resultat.roi>=0 && resultat.roi<20 && `Marge faible. Cherchez à augmenter le prix de vente via le Marché Cadran ou réduire les intrants.`}
+                    {resultat.roi<0 && `Attention, cette campagne est déficitaire selon vos estimations. Vérifiez vos charges ou le prix de vente cible.`}
                   </div>
                   {resultat.charges===0&&<div style={{marginTop:'.5rem',fontSize:'.8rem',color:'var(--ink4)'}}>💡 Entrez vos charges pour un calcul plus précis</div>}
                 </div>
