@@ -1,0 +1,2084 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TONTINE+ · Plateforme Nationale · Sénégal</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;0,900;1,700&family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+*,::before,::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080F08;--s1:#0D160D;--s2:#111C11;--s3:#172017;--s4:#1D261D;
+  --green:#2A7D42;--g2:#3A9E56;--g3:#4DBF6A;
+  --lime:#7EC845;--lime2:#A2E060;
+  --gold:#C49A28;--gold2:#F0C040;--gold3:#FFD060;
+  --teal:#1A9E8E;--teal2:#25C4B0;
+  --amber:#D4740A;--amber2:#F08C20;
+  --blue:#2060C0;--blue2:#4080E0;
+  --rust:#C44A2A;--rust2:#E06040;
+  --ink:#E8F2E8;--ink2:#9AB89A;--ink3:#5A785A;--ink4:#3A503A;
+  --border:#1C2C1C;--border2:#243424;--border3:#2E423E;
+  --f-d:'Fraunces',Georgia,serif;
+  --f-b:'Sora',system-ui,sans-serif;
+  --f-m:'JetBrains Mono',monospace;
+  --r:14px;--r2:9px;--r3:6px;
+  --sh:0 4px 32px rgba(0,0,0,.5);
+  --sh2:0 8px 48px rgba(0,0,0,.6);
+}
+html,body,#root{height:100%;font-family:var(--f-b);background:var(--bg);color:var(--ink);overflow-x:hidden}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--s1)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:var(--border3)}
+
+/* ── APP LAYOUT ── */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:248px;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.main{flex:1;overflow-y:auto;background:var(--bg);position:relative}
+
+/* ── SIDEBAR ── */
+.sb-brand{padding:1.4rem 1.25rem .9rem;border-bottom:1px solid var(--border)}
+.sb-logo{font-family:var(--f-d);font-size:1.5rem;font-weight:900;color:var(--lime);letter-spacing:-.02em;line-height:1}
+.sb-logo span{color:var(--gold2)}
+.sb-tagline{font-size:.62rem;color:var(--ink3);margin-top:.25rem;letter-spacing:.06em;text-transform:uppercase}
+.sb-flag{display:inline-flex;align-items:center;gap:.3rem;background:rgba(126,200,69,.08);border:1px solid rgba(126,200,69,.15);border-radius:99px;padding:.18rem .55rem;font-size:.62rem;font-weight:700;color:var(--lime);margin-top:.45rem;letter-spacing:.04em}
+
+.sb-user{margin:.7rem .9rem;background:var(--s2);border:1px solid var(--border2);border-radius:var(--r2);padding:1rem}
+.sb-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;border:2px solid var(--border2)}
+.sb-uname{font-weight:700;font-size:.84rem;color:var(--ink);line-height:1.2}
+.sb-usub{font-size:.68rem;color:var(--ink3);margin-top:.1rem}
+.sb-score-row{margin-top:.65rem;display:flex;align-items:center;gap:.55rem}
+.sb-score-track{flex:1;height:3px;background:var(--border);border-radius:99px;overflow:hidden}
+.sb-score-fill{height:100%;border-radius:99px;transition:width .6s}
+.sb-score-num{font-family:var(--f-m);font-size:.72rem;font-weight:500}
+
+.sb-nav{flex:1;padding:.5rem .7rem;overflow-y:auto}
+.sb-sec{font-size:.58rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--ink4);padding:.65rem .6rem .3rem;margin-top:.15rem}
+.sb-item{display:flex;align-items:center;gap:.6rem;padding:.58rem .7rem;border-radius:var(--r3);cursor:pointer;font-size:.82rem;color:var(--ink3);transition:.15s;margin-bottom:.1rem;border:1px solid transparent;position:relative}
+.sb-item:hover{background:var(--s3);color:var(--ink);border-color:var(--border2)}
+.sb-item.on{color:var(--lime);border-color:rgba(126,200,69,.2)}
+.sb-item.on::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2px;background:var(--lime);border-radius:99px}
+.sb-ic{font-size:.95rem;width:18px;text-align:center;flex-shrink:0}
+.sb-dot{margin-left:auto;min-width:18px;height:18px;border-radius:99px;display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700}
+.dot-red{background:var(--rust);color:#fff}
+.dot-green{background:var(--lime);color:#0D1B0D}
+.dot-gold{background:var(--gold);color:#fff}
+
+.sb-foot{padding:.8rem 1.1rem;border-top:1px solid var(--border)}
+.sb-logout{display:flex;align-items:center;gap:.45rem;font-size:.78rem;color:var(--ink4);cursor:pointer;padding:.35rem 0;transition:.15s}
+.sb-logout:hover{color:var(--rust2)}
+.sb-version{font-size:.62rem;color:var(--ink4);margin-top:.35rem;line-height:1.6}
+
+/* ── SECTOR BADGE ── */
+.sector-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .65rem;border-radius:99px;font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.sec-agri{background:rgba(126,200,69,.15);color:var(--lime);border:1px solid rgba(126,200,69,.25)}
+.sec-elev{background:rgba(212,116,10,.15);color:var(--amber2);border:1px solid rgba(212,116,10,.25)}
+.sec-mix{background:rgba(26,158,142,.15);color:var(--teal2);border:1px solid rgba(26,158,142,.25)}
+.sec-invest{background:rgba(240,192,64,.15);color:var(--gold3);border:1px solid rgba(240,192,64,.25)}
+
+/* ── PAGE HEADER ── */
+.ph{padding:2rem 2.5rem 1.5rem;border-bottom:1px solid var(--border)}
+.ph-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.ph-tag{font-size:.62rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--lime);margin-bottom:.3rem}
+.ph-title{font-family:var(--f-d);font-size:1.8rem;font-weight:700;color:var(--ink);line-height:1.12}
+.ph-sub{font-size:.82rem;color:var(--ink3);margin-top:.3rem;line-height:1.55}
+.ph-actions{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.5rem}
+
+/* ── CONTENT ── */
+.content{padding:1.75rem 2.5rem}
+
+/* ── CARDS ── */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem}
+.card:hover{border-color:var(--border2)}
+.card-sm{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:1rem}
+.card-title{font-weight:700;font-size:.88rem;color:var(--ink);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.card-title span{font-size:.78rem;font-weight:400;color:var(--ink3)}
+
+/* ── STAT CARDS ── */
+.stat{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:1.35rem;position:relative;overflow:hidden;transition:.2s}
+.stat:hover{border-color:var(--border2);transform:translateY(-2px)}
+.stat::after{content:'';position:absolute;top:-24px;right:-24px;width:90px;height:90px;border-radius:50%;background:var(--glow,rgba(126,200,69,.05))}
+.stat-ic{font-size:1.5rem;margin-bottom:.6rem}
+.stat-val{font-family:var(--f-d);font-size:2rem;font-weight:700;color:var(--ink);line-height:1}
+.stat-lbl{font-size:.7rem;color:var(--ink3);margin-top:.2rem;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.stat-sub{font-size:.72rem;margin-top:.45rem;display:flex;align-items:center;gap:.3rem}
+.up{color:var(--lime)}.dn{color:var(--rust2)}.neu{color:var(--ink3)}
+
+/* ── GRID ── */
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem}
+.g2-3{display:grid;grid-template-columns:1fr 1.4fr;gap:1.4rem}
+.gauto{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.1rem}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.15rem;border-radius:var(--r2);font-size:.82rem;font-weight:600;cursor:pointer;border:none;font-family:var(--f-b);transition:.15s;white-space:nowrap}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn-lime{background:var(--lime);color:#080F08}
+.btn-green{background:var(--green);color:#fff}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-teal{background:var(--teal);color:#fff}
+.btn-amber{background:var(--amber);color:#fff}
+.btn-ghost{background:transparent;color:var(--ink2);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--s2);color:var(--ink)}
+.btn-danger{background:rgba(196,74,42,.12);color:var(--rust2);border:1px solid rgba(196,74,42,.2)}
+.btn-sm{padding:.38rem .8rem;font-size:.76rem}
+.btn-xs{padding:.24rem .55rem;font-size:.68rem;border-radius:var(--r3)}
+
+/* ── FORM ── */
+.fg{margin-bottom:.9rem}
+.fg label{display:block;font-size:.7rem;font-weight:700;color:var(--ink3);margin-bottom:.3rem;letter-spacing:.05em;text-transform:uppercase}
+.fg input,.fg select,.fg textarea{width:100%;padding:.58rem .85rem;border:1px solid var(--border2);border-radius:var(--r2);font-size:.84rem;font-family:var(--f-b);background:var(--s2);color:var(--ink);outline:none;transition:border .2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--lime);background:var(--s3)}
+.fg input::placeholder{color:var(--ink4)}
+.fg select option{background:var(--s1);color:var(--ink)}
+.fg textarea{resize:vertical;min-height:80px;line-height:1.6}
+.fg-hint{font-size:.68rem;color:var(--ink4);margin-top:.25rem;line-height:1.5}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.65rem}
+.frow-btns{display:flex;gap:.65rem;justify-content:flex-end;margin-top:1.35rem;padding-top:1.1rem;border-top:1px solid var(--border)}
+
+/* ── CHIP ── */
+.chip{display:inline-flex;align-items:center;gap:.28rem;padding:.2rem .6rem;border-radius:99px;font-size:.68rem;font-weight:600}
+.ch-lime{background:rgba(126,200,69,.15);color:var(--lime);border:1px solid rgba(126,200,69,.22)}
+.ch-gold{background:rgba(240,192,64,.15);color:var(--gold3);border:1px solid rgba(240,192,64,.22)}
+.ch-amber{background:rgba(212,116,10,.15);color:var(--amber2);border:1px solid rgba(212,116,10,.22)}
+.ch-teal{background:rgba(26,158,142,.15);color:var(--teal2);border:1px solid rgba(26,158,142,.22)}
+.ch-rust{background:rgba(196,74,42,.15);color:var(--rust2);border:1px solid rgba(196,74,42,.22)}
+.ch-blue{background:rgba(32,96,192,.15);color:var(--blue2);border:1px solid rgba(32,96,192,.22)}
+.ch-gray{background:var(--s3);color:var(--ink3);border:1px solid var(--border2)}
+
+/* ── SCORE RING ── */
+.ring-wrap{display:flex;flex-direction:column;align-items:center;gap:.35rem}
+.ring{position:relative;flex-shrink:0}
+.ring svg{transform:rotate(-90deg);display:block}
+.ring-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-n{font-family:var(--f-d);font-weight:700;line-height:1}
+.ring-s{font-size:.52rem;color:var(--ink4)}
+.ring-lbl{font-size:.64rem;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;border-radius:var(--r2);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+th{padding:.65rem 1rem;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4);text-align:left;background:var(--s2);border-bottom:1px solid var(--border)}
+td{padding:.72rem 1rem;font-size:.82rem;border-bottom:1px solid var(--border);color:var(--ink);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.015)}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:1rem}
+.modal{background:var(--s1);border:1px solid var(--border3);border-radius:18px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:var(--sh2)}
+.modal-lg{max-width:640px}
+.mh{padding:1.4rem 1.6rem 1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.m-title{font-family:var(--f-d);font-size:1.15rem;font-weight:700;color:var(--ink)}
+.m-close{background:var(--s2);border:1px solid var(--border);border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink3);font-size:.82rem;transition:.15s}
+.m-close:hover{background:var(--s3);color:var(--rust2)}
+.mb{padding:1.5rem 1.6rem}
+
+/* ── TOAST ── */
+.toast-cont{position:fixed;bottom:1.5rem;right:1.5rem;z-index:2000;display:flex;flex-direction:column;gap:.45rem;pointer-events:none}
+.toast{background:var(--s2);border:1px solid var(--border3);border-radius:10px;padding:.72rem 1rem;display:flex;align-items:center;gap:.6rem;font-size:.8rem;box-shadow:var(--sh2);animation:tin .3s cubic-bezier(.175,.885,.32,1.275);max-width:330px}
+.toast-s{border-left:3px solid var(--lime)}
+.toast-e{border-left:3px solid var(--rust2)}
+.toast-i{border-left:3px solid var(--gold)}
+@keyframes tin{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── PROGRESS BAR ── */
+.pbar-wrap{background:var(--border);border-radius:99px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:99px;transition:width .5s}
+
+/* ── ACTIVITY ── */
+.act-item{display:flex;gap:.7rem;padding:.7rem 0;border-bottom:1px solid var(--border)}
+.act-item:last-child{border-bottom:none}
+.act-ic{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.82rem;flex-shrink:0}
+.act-text{font-size:.8rem;color:var(--ink);line-height:1.5}
+.act-date{font-size:.68rem;color:var(--ink4);margin-top:.1rem}
+
+/* ── PROJECT CARD ── */
+.proj-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:1.35rem;cursor:pointer;transition:.2s;position:relative;overflow:hidden}
+.proj-card:hover{border-color:var(--border3);transform:translateY(-2px);box-shadow:var(--sh)}
+.proj-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--proj-color,var(--lime))}
+.proj-name{font-family:var(--f-d);font-size:1.05rem;font-weight:700;color:var(--ink);margin-bottom:.4rem;margin-top:.3rem}
+.proj-promo{font-size:.78rem;color:var(--ink3);margin-bottom:.75rem;line-height:1.5}
+.proj-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.85rem}
+.proj-stat{background:var(--s2);border-radius:var(--r3);padding:.55rem .65rem;text-align:center}
+.proj-stat-val{font-family:var(--f-d);font-size:1.1rem;font-weight:700;color:var(--ink);line-height:1}
+.proj-stat-lbl{font-size:.62rem;color:var(--ink4);margin-top:.1rem;text-transform:uppercase;letter-spacing:.04em}
+.proj-progress{margin-bottom:.85rem}
+.proj-prog-head{display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:.3rem}
+
+/* ── INVEST CARD ── */
+.invest-option{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:1rem;display:flex;align-items:center;gap:.85rem;cursor:pointer;transition:.2s;margin-bottom:.6rem}
+.invest-option:hover{border-color:var(--gold);background:rgba(196,154,40,.05)}
+.invest-option.sel{border-color:var(--gold2);background:rgba(240,192,64,.08)}
+.invest-opt-ic{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.invest-opt-n{font-weight:700;font-size:.88rem;color:var(--ink)}
+.invest-opt-d{font-size:.74rem;color:var(--ink3);margin-top:.1rem}
+.invest-opt-r{margin-left:auto;text-align:right}
+.invest-opt-rate{font-family:var(--f-d);font-size:1.1rem;font-weight:700;color:var(--gold2)}
+.invest-opt-dur{font-size:.68rem;color:var(--ink4);margin-top:.1rem}
+
+/* ── REGION TAG ── */
+.region-chip{display:inline-flex;align-items:center;gap:.3rem;background:var(--s3);border:1px solid var(--border2);border-radius:99px;padding:.2rem .6rem;font-size:.68rem;color:var(--ink3)}
+
+/* ── INFO BOX ── */
+.info-box{border-radius:var(--r2);padding:.85rem 1rem;font-size:.8rem;line-height:1.65}
+.info-lime{background:rgba(126,200,69,.07);border:1px solid rgba(126,200,69,.18);color:var(--ink2)}
+.info-gold{background:rgba(240,192,64,.07);border:1px solid rgba(240,192,64,.18);color:var(--ink2)}
+.info-rust{background:rgba(196,74,42,.07);border:1px solid rgba(196,74,42,.18);color:var(--ink2)}
+.info-teal{background:rgba(26,158,142,.07);border:1px solid rgba(26,158,142,.18);color:var(--ink2)}
+
+/* ── DIVIDER ── */
+hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
+
+/* ── EMPTY ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 2rem;text-align:center}
+.empty-ic{font-size:2.5rem;margin-bottom:1rem;opacity:.4}
+.empty-t{font-size:.95rem;font-weight:700;color:var(--ink2);margin-bottom:.35rem}
+.empty-s{font-size:.8rem;color:var(--ink4);line-height:1.65;max-width:280px}
+
+/* ── UTILS ── */
+.flex{display:flex}.fcc{display:flex;align-items:center}.fsc{display:flex;align-items:flex-start}.fsb{display:flex;justify-content:space-between}.fcsb{display:flex;align-items:center;justify-content:space-between}
+.gap1{gap:.5rem}.gap2{gap:1rem}.gap3{gap:1.5rem}
+.mt1{margin-top:.5rem}.mt2{margin-top:1rem}.mt3{margin-top:1.5rem}
+.mb1{margin-bottom:.5rem}.mb2{margin-bottom:1rem}.mb3{margin-bottom:1.5rem}
+.w100{width:100%}.bold{font-weight:700}.mono{font-family:var(--f-m)}
+.t-sm{font-size:.8rem}.t-xs{font-size:.7rem}.t-muted{color:var(--ink3)}.t-lime{color:var(--lime)}.t-gold{color:var(--gold2)}.t-rust{color:var(--rust2)}.t-teal{color:var(--teal2)}.t-amber{color:var(--amber2)}
+
+/* ── LOGIN ── */
+.login-bg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden}
+.login-bg::before{content:'';position:absolute;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(42,125,66,.1) 0%,transparent 65%);top:-250px;left:-250px}
+.login-bg::after{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(196,154,40,.07) 0%,transparent 65%);bottom:-150px;right:-150px}
+.login-card{background:var(--s1);border:1px solid var(--border3);border-radius:20px;padding:2.5rem;width:100%;max-width:400px;position:relative;z-index:2;box-shadow:var(--sh2)}
+.login-logo{font-family:var(--f-d);font-size:2.2rem;font-weight:900;color:var(--lime);line-height:1}
+.login-logo b{color:var(--gold2)}
+.login-sub{font-size:.8rem;color:var(--ink3);margin-top:.3rem;margin-bottom:.5rem;line-height:1.55}
+.login-flags{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:1.75rem}
+.login-flag{background:var(--s2);border:1px solid var(--border);border-radius:99px;padding:.2rem .65rem;font-size:.68rem;color:var(--ink3)}
+.tabs{display:flex;gap:.4rem;background:var(--s2);padding:.3rem;border-radius:var(--r2);margin-bottom:1.5rem}
+.tab{flex:1;padding:.45rem;text-align:center;border-radius:var(--r3);font-size:.8rem;font-weight:600;cursor:pointer;color:var(--ink3);transition:.2s}
+.tab.on{background:var(--green);color:#fff}
+.demo-btns{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:.9rem 1rem;margin-top:.85rem}
+.demo-label{font-size:.72rem;font-weight:700;color:var(--ink3);margin-bottom:.6rem;letter-spacing:.04em;text-transform:uppercase}
+.demo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.45rem}
+
+@media(max-width:800px){
+  .sidebar{display:none}
+  .g4{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:1fr}
+  .g2,.g2-3{grid-template-columns:1fr}
+  .fr,.fr3{grid-template-columns:1fr}
+  .content{padding:1.25rem}
+  .ph{padding:1.25rem 1.25rem 1rem}
+}
+</style>
+</head>
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<script type="text/babel">
+const {useState,useEffect,useCallback,useMemo,useRef} = React;
+
+/* ══════════════════════════════════════════════════════
+   SUPABASE CLIENT
+══════════════════════════════════════════════════════ */
+const SB_URL  = 'https://yxpluppgnztdswwmnhfd.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4cGx1cHBnbnp0ZHN3d21uaGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwNDYxMDEsImV4cCI6MjA4NzYyMjEwMX0.UObjZEihMuH3vOuiufLbaB2jlWJB2_M0a7kPui8bdLc';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+/* ══════════════════════════════════════════════════════
+   CONVERTISSEURS DB → FORMAT APP
+══════════════════════════════════════════════════════ */
+function dbUser(u, extra={}) {
+  return {
+    id: u.id,
+    nom: u.nom,
+    telephone: u.telephone,
+    village: u.village || '',
+    region: u.region || 'Dakar',
+    secteur: u.secteur || 'agriculture',
+    role: u.role || 'paysan',
+    dateInscription: (u.created_at||'').slice(0,10),
+    cotisations: extra.cotisations || [],
+    credits:     extra.credits     || [],
+    tontines:    extra.tontines    || [],
+    investissements: extra.investissements || [],
+  };
+}
+function dbTontine(t) {
+  return {
+    id: t.id,
+    nom: t.nom,
+    admin: t.admin_id,
+    secteur: t.secteur,
+    region: t.region,
+    montantCotis: t.montant_cotis,
+    frequence: t.frequence,
+    nbMax: t.nb_max,
+    semaine: t.semaine_courante || 1,
+    statut: t.statut,
+    description: t.description || '',
+    dateCreation: (t.created_at||'').slice(0,10),
+    membres: (t.membres||[]).map(m=>({
+      uid: m.user_id,
+      tour: m.tour_num,
+      pot: m.a_recu_pot,
+      nom: m.user ? m.user.nom : '',
+    })),
+  };
+}
+function dbCotis(c) {
+  return { id:c.id, tontineId:c.tontine_id, montant:c.montant, statut:c.statut, date:c.date };
+}
+function dbCredit(c) {
+  return {
+    id:c.id, montant:c.montant, intrant:c.intrant, partenaire:c.partenaire||'',
+    statut:c.statut, scoreSnapshot:c.score_snapshot||0,
+    dateOctroi:c.date_octroi, dateEcheance:c.date_echeance||'',
+  };
+}
+function dbProjet(p) {
+  return {
+    id:p.id, nom:p.nom, promoteur:p.promoteur||'', region:p.region||'',
+    secteur:p.secteur, description:p.description||'',
+    objectif:p.objectif, collecte:p.collecte,
+    dateFinancement:p.date_financement||'',
+    rendementAnnuel:p.rendement_annuel, dureeMois:p.duree_mois,
+    risque:p.risque, investisseurs:p.investisseurs,
+    statut:p.statut, updates:p.updates||[],
+    dateCreation:(p.created_at||'').slice(0,10),
+  };
+}
+function dbInvest(i) {
+  return { projetId:i.projet_id, montant:i.montant, retourAttendu:i.retour_attendu||0, date:i.date };
+}
+
+/* ══════════════════════════════════════════════════════
+   FONCTIONS SUPABASE CRUD
+══════════════════════════════════════════════════════ */
+
+// Charger les données complètes d'un user
+async function loadUserData(userId) {
+  const [cotisRes, credRes, membresRes, investRes] = await Promise.all([
+    sb.from('cotisations').select('*').eq('user_id',userId).order('date',{ascending:false}),
+    sb.from('credits').select('*').eq('user_id',userId).order('date_octroi',{ascending:false}),
+    sb.from('membres').select('tontine_id').eq('user_id',userId),
+    sb.from('investissements').select('*').eq('user_id',userId).order('date',{ascending:false}),
+  ]);
+  return {
+    cotisations: (cotisRes.data||[]).map(dbCotis),
+    credits:     (credRes.data||[]).map(dbCredit),
+    tontines:    (membresRes.data||[]).map(m=>m.tontine_id),
+    investissements: (investRes.data||[]).map(dbInvest),
+  };
+}
+
+// Charger toutes les tontines
+async function sbFetchTontines() {
+  const { data } = await sb.from('tontines')
+    .select('*, membres(id,user_id,tour_num,a_recu_pot,user:users(id,nom))')
+    .order('created_at',{ascending:false});
+  return (data||[]).map(dbTontine);
+}
+
+// Charger tous les projets
+async function sbFetchProjets() {
+  const { data } = await sb.from('projets').select('*').order('created_at',{ascending:false});
+  return (data||[]).map(dbProjet);
+}
+
+// Créer tontine + inscrire admin comme membre
+async function sbCreerTontine(user, f) {
+  const { data:t, error } = await sb.from('tontines').insert({
+    nom:f.nom, admin_id:user.id, secteur:f.secteur, region:f.region,
+    montant_cotis:parseInt(f.montant), frequence:f.frequence,
+    nb_max:parseInt(f.nbMax), description:f.desc||'', statut:'actif',
+  }).select().single();
+  if (error) throw new Error(error.message);
+  await sb.from('membres').insert({ user_id:user.id, tontine_id:t.id, tour_num:1, a_recu_pot:false });
+  return t.id;
+}
+
+// Rejoindre une tontine
+async function sbRejoindre(userId, tontine) {
+  if (tontine.membres.some(m=>m.uid===userId)) throw new Error('Déjà membre');
+  if (tontine.membres.length >= tontine.nbMax) throw new Error('Tontine complète');
+  const { error } = await sb.from('membres').insert({
+    user_id:userId, tontine_id:tontine.id,
+    tour_num:tontine.membres.length+1, a_recu_pot:false,
+  });
+  if (error) throw new Error(error.message);
+}
+
+// Payer une cotisation
+async function sbPayerCotis(userId, tontine) {
+  const { data, error } = await sb.from('cotisations').insert({
+    user_id:userId, tontine_id:tontine.id,
+    montant:tontine.montantCotis, statut:'payee',
+    date:new Date().toISOString().slice(0,10),
+  }).select().single();
+  if (error) throw new Error(error.message);
+  return dbCotis(data);
+}
+
+// Demander un crédit
+async function sbDemanderCredit(userId, f, score) {
+  const dateOctroi = new Date().toISOString().slice(0,10);
+  const dateEcheance = new Date(Date.now()+180*24*60*60*1000).toISOString().slice(0,10);
+  const { data, error } = await sb.from('credits').insert({
+    user_id:userId, montant:parseInt(f.montant), intrant:f.intrant,
+    partenaire:f.partenaire, statut:'approuve',
+    score_snapshot:score, date_octroi:dateOctroi, date_echeance:dateEcheance,
+  }).select().single();
+  if (error) throw new Error(error.message);
+  return dbCredit(data);
+}
+
+// Rembourser un crédit
+async function sbRembourser(creditId) {
+  const { error } = await sb.from('credits').update({statut:'rembourse'}).eq('id',creditId);
+  if (error) throw new Error(error.message);
+}
+
+// Créer un projet
+async function sbCreerProjet(userId, fp) {
+  const { data, error } = await sb.from('projets').insert({
+    nom:fp.nom, promoteur:fp.promoteur, region:fp.region, secteur:fp.secteur,
+    description:fp.desc, objectif:parseInt(fp.objectif), collecte:0,
+    rendement_annuel:parseInt(fp.rendement), duree_mois:parseInt(fp.duree),
+    risque:fp.risque, investisseurs:0, statut:'ouvert',
+    updates:[], date_financement:new Date(Date.now()+120*24*60*60*1000).toISOString().slice(0,10),
+  }).select().single();
+  if (error) throw new Error(error.message);
+  return dbProjet(data);
+}
+
+// Investir dans un projet
+async function sbInvestir(userId, projet, montant) {
+  const retourBrut = Math.round(montant*(1+projet.rendementAnnuel/100*(projet.dureeMois/12)));
+  const { data, error } = await sb.from('investissements').insert({
+    user_id:userId, projet_id:projet.id, montant,
+    retour_attendu:retourBrut-montant,
+    date:new Date().toISOString().slice(0,10),
+  }).select().single();
+  if (error) throw new Error(error.message);
+  // Mettre à jour collecte + investisseurs côté client (le trigger SQL le fait aussi)
+  return dbInvest(data);
+}
+
+// Mettre à jour profil
+async function sbUpdateProfil(userId, f) {
+  const { error } = await sb.from('users').update({
+    nom:f.nom, village:f.village, region:f.region, secteur:f.secteur,
+  }).eq('id',userId);
+  if (error) throw new Error(error.message);
+}
+
+// Marquer retard (admin)
+async function sbMarquerRetard(userId, tontineId) {
+  const { error } = await sb.from('cotisations').insert({
+    user_id:userId, tontine_id:tontineId,
+    montant:0, statut:'retard', date:new Date().toISOString().slice(0,10),
+  });
+  if (error) throw new Error(error.message);
+}
+
+const REGIONS = ['Dakar','Thiès','Diourbel','Saint-Louis','Louga','Fatick','Kaolack','Ziguinchor','Tambacounda','Kédougou','Kolda','Sédhiou','Kaffrine','Matam','Podor'];
+const SECTEURS = [
+  {id:'agriculture', label:'Agriculture', ic:'🌱', color:'var(--lime)', cls:'sec-agri'},
+  {id:'elevage', label:'Élevage', ic:'🐄', color:'var(--amber2)', cls:'sec-elev'},
+  {id:'mixte', label:'Agri + Élevage', ic:'🌾', color:'var(--teal2)', cls:'sec-mix'},
+];
+const INTRANTS_AGRI = ['Semences certifiées','Engrais NPK','Engrais DAP','Pesticides homologués','Petit équipement','Irrigation goutte-à-goutte','Matériel de récolte'];
+const INTRANTS_ELEV = ['Aliments bétail','Vaccins & médicaments','Équipement vétérinaire','Matériel d\'enclos','Géniteurs améliorés','Produits laitiers (équipement)'];
+const PARTENAIRES = ['DER Sénégal','FADA','PAM CAS','ANCAR','PRACAS','Crédit Mutuel du Sénégal'];
+const ESPECES = ['Bovins','Ovins','Caprins','Porcins','Volaille','Équidés','Camelins'];
+const CULTURES = ['Arachide','Mil','Maïs','Sorgho','Riz','Niébé','Coton','Tomate','Oignon','Manioc','Pastèque','Bissap'];
+
+/* Projets d'investissement initiaux */
+const PROJETS_INIT = [
+  {
+    id:'p1', nom:'Ferme Avicole Moderne — Thiès', promoteur:'Abdoulaye Ndiaye',
+    region:'Thiès', secteur:'elevage', espece:'Volaille',
+    description:'Construction d\'un poulailler de 5 000 places avec système automatisé. Production d\'œufs et poulets de chair pour la région de Thiès.',
+    objectif:4500000, collecte:2850000, dateFinancement:'2026-06-30',
+    rendementAnnuel:14, dureeMois:18, risque:'modere',
+    investisseurs:12, statut:'ouvert', dateCreation:'2026-01-15',
+    updates:['Permis de construire obtenu','Accord SODEFITEX signé']
+  },
+  {
+    id:'p2', nom:'Périmètre Irrigué Oignons — Saint-Louis', promoteur:'Coopérative Walo',
+    region:'Saint-Louis', secteur:'agriculture', culture:'Oignon',
+    description:'Extension d\'un périmètre maraîcher de 5 hectares avec pompe solaire. 3 campagnes/an garanties par contrat avec Auchan Sénégal.',
+    objectif:7200000, collecte:5400000, dateFinancement:'2026-04-15',
+    rendementAnnuel:18, dureeMois:24, risque:'faible',
+    investisseurs:27, statut:'ouvert', dateCreation:'2025-12-10',
+    updates:['Contrat Auchan signé','Pompe solaire commandée','15 familles bénéficiaires']
+  },
+  {
+    id:'p3', nom:'Ranch Bovin Amélioré — Tambacounda', promoteur:'Mamadou Ba',
+    region:'Tambacounda', secteur:'elevage', espece:'Bovins',
+    description:'Acquisition de 40 bovins de race améliorée (Ndama × Zébu). Exploitation laitière + vente de viande. Partenariat avec NMA Sanders.',
+    objectif:12000000, collecte:8400000, dateFinancement:'2026-07-31',
+    rendementAnnuel:16, dureeMois:36, risque:'modere',
+    investisseurs:18, statut:'ouvert', dateCreation:'2026-01-20',
+    updates:['Site clôturé','Accord vétérinaire DIREL']
+  },
+  {
+    id:'p4', nom:'Riziculture Casamance — Ziguinchor', promoteur:'Groupement Femmes Kabrousse',
+    region:'Ziguinchor', secteur:'agriculture', culture:'Riz',
+    description:'Réhabilitation de 8 ha de rizières en Casamance. Variétés améliorées ISRA, deux campagnes/an. Commercialisation locale garantie.',
+    objectif:3800000, collecte:3800000, dateFinancement:'2026-03-01',
+    rendementAnnuel:12, dureeMois:12, risque:'faible',
+    investisseurs:31, statut:'finance', dateCreation:'2025-11-01',
+    updates:['Objectif atteint !','Travaux démarrés','Première récolte prévue juillet 2026']
+  },
+  {
+    id:'p5', nom:'Unité Transformation Tomate — Kaolack', promoteur:'UTSK SARL',
+    region:'Kaolack', secteur:'mixte',
+    description:'Unité artisanale de transformation de tomate en concentré et sauce. Capacité 2 tonnes/jour. Marché local + exportation Gambie.',
+    objectif:9500000, collecte:1200000, dateFinancement:'2026-09-30',
+    rendementAnnuel:20, dureeMois:30, risque:'eleve',
+    investisseurs:4, statut:'ouvert', dateCreation:'2026-02-01',
+    updates:['Étude de marché validée']
+  },
+];
+
+/* Utilisateurs démo */
+const USERS_DEMO = {
+  paysan: {
+    id:'u1',nom:'Baye Sène',telephone:'+221771234567',village:'Touba Toul',
+    region:'Diourbel',secteur:'agriculture',cultures:['Arachide','Mil'],
+    role:'paysan',dateInscription:'2026-01-15',
+    cotisations:[
+      {id:'c1',tontineId:'t1',montant:5000,statut:'payee',date:'2026-01-20'},
+      {id:'c2',tontineId:'t1',montant:5000,statut:'payee',date:'2026-01-27'},
+      {id:'c3',tontineId:'t1',montant:5000,statut:'payee',date:'2026-02-03'},
+      {id:'c4',tontineId:'t1',montant:5000,statut:'retard',date:'2026-02-10'},
+      {id:'c5',tontineId:'t1',montant:5000,statut:'payee',date:'2026-02-17'},
+      {id:'c6',tontineId:'t2',montant:3000,statut:'payee',date:'2026-02-01'},
+      {id:'c7',tontineId:'t2',montant:3000,statut:'payee',date:'2026-02-15'},
+    ],
+    credits:[{id:'cr1',montant:40000,intrant:'Semences certifiées',statut:'rembourse',dateOctroi:'2025-10-01',dateEcheance:'2026-04-01'}],
+    investissements:[{projetId:'p2',montant:150000,date:'2026-01-20',retourAttendu:27000}],
+    tontines:['t1','t2'],
+  },
+  eleveur: {
+    id:'u3',nom:'Ousmane Diallo',telephone:'+221776543210',village:'Linguère',
+    region:'Louga',secteur:'elevage',especes:['Bovins','Ovins'],
+    role:'paysan',dateInscription:'2026-01-08',
+    cotisations:[
+      {id:'c10',tontineId:'t3',montant:10000,statut:'payee',date:'2026-01-15'},
+      {id:'c11',tontineId:'t3',montant:10000,statut:'payee',date:'2026-02-15'},
+      {id:'c12',tontineId:'t3',montant:10000,statut:'payee',date:'2026-02-20'},
+    ],
+    credits:[],
+    investissements:[{projetId:'p1',montant:250000,date:'2026-01-25',retourAttendu:35000}],
+    tontines:['t3'],
+  },
+  admin: {
+    id:'u2',nom:'Mariama Diallo',telephone:'+221775551234',village:'Bambey',
+    region:'Diourbel',secteur:'mixte',
+    role:'admin',dateInscription:'2025-12-01',
+    cotisations:[
+      {id:'c8',tontineId:'t1',montant:5000,statut:'payee',date:'2026-01-20'},
+      {id:'c9',tontineId:'t1',montant:5000,statut:'payee',date:'2026-01-27'},
+      {id:'c10b',tontineId:'t1',montant:5000,statut:'payee',date:'2026-02-03'},
+      {id:'c11b',tontineId:'t1',montant:5000,statut:'payee',date:'2026-02-10'},
+      {id:'c12b',tontineId:'t1',montant:5000,statut:'payee',date:'2026-02-17'},
+    ],
+    credits:[],
+    investissements:[],
+    tontines:['t1'],
+  },
+};
+
+const TONTINES_INIT = [
+  {id:'t1',nom:'Tontine Espoir Bambey',admin:'u2',secteur:'agriculture',region:'Diourbel',
+   montantCotis:5000,frequence:'hebdomadaire',nbMax:10,semaine:8,dateCreation:'2025-12-01',statut:'actif',
+   description:'Tontine hebdomadaire agriculture. Financement semences et engrais.',
+   membres:[{uid:'u1',tour:3,pot:false},{uid:'u2',tour:1,pot:true,nom:'Mariama Diallo'},{uid:'u3b',tour:2,pot:true,nom:'Fatou Ndiaye'},{uid:'u4',tour:4,pot:false,nom:'Ibrahima Sow'}]},
+  {id:'t2',nom:'Groupe Agricole National',admin:'u2',secteur:'agriculture',region:'Thiès',
+   montantCotis:3000,frequence:'mensuel',nbMax:8,semaine:3,dateCreation:'2026-01-10',statut:'actif',
+   description:'Groupe mensuel multi-régions pour cultures maraîchères.',
+   membres:[{uid:'u1',tour:2,pot:false},{uid:'u5',tour:1,pot:true,nom:'Aissatou Ba'},{uid:'u6',tour:3,pot:false,nom:'Moussa Diop'}]},
+  {id:'t3',nom:'Éleveurs du Nord',admin:'u3',secteur:'elevage',region:'Louga',
+   montantCotis:10000,frequence:'mensuel',nbMax:6,semaine:2,dateCreation:'2026-01-05',statut:'actif',
+   description:'Tontine mensuelle pour éleveurs bovins et ovins du Nord Sénégal.',
+   membres:[{uid:'u3',tour:1,pot:false},{uid:'u7',tour:2,pot:false,nom:'Aliou Mbaye'},{uid:'u8',tour:3,pot:false,nom:'Samba Gaye'}]},
+];
+
+/* ── SCORING ── */
+function calcScore(user) {
+  const c = user.cotisations || [];
+  if (!c.length) return 0;
+  const paid = c.filter(x=>x.statut==='payee').length;
+  const retards = c.filter(x=>x.statut==='retard').length;
+  const tontines = (user.tontines||[]).length;
+  const credRembourses = (user.credits||[]).filter(x=>x.statut==='rembourse').length;
+  const investOk = (user.investissements||[]).length;
+  return Math.round(Math.max(0,Math.min(100,
+    (paid/c.length)*60 +
+    Math.min(tontines/5,1)*12 +
+    Math.min(c.length/24,1)*10 +
+    Math.min(credRembourses/3,1)*10 +
+    Math.min(investOk/2,1)*3 -
+    retards*5
+  )));
+}
+
+/* ── TOAST HOOK ── */
+let tid=0;
+function useToast(){
+  const [toasts,setToasts]=useState([]);
+  const add=useCallback((msg,type='s')=>{
+    const id=++tid;
+    setToasts(p=>[...p,{id,msg,type}]);
+    setTimeout(()=>setToasts(p=>p.filter(t=>t.id!==id)),3800);
+  },[]);
+  return {toasts,add};
+}
+
+/* ── COMPOSANTS UTILITAIRES ── */
+function ScoreRing({score,sz=100,fsz='1.5rem'}){
+  const r=(sz-8)/2,circ=2*Math.PI*r,dash=(score/100)*circ;
+  const col=score>=65?'var(--lime)':score>=40?'var(--gold2)':'var(--rust2)';
+  return(
+    <div className="ring-wrap">
+      <div className="ring" style={{width:sz,height:sz}}>
+        <svg width={sz} height={sz}>
+          <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="7"/>
+          <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={col} strokeWidth="7"
+            strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+            style={{transition:'stroke-dasharray .7s ease'}}/>
+        </svg>
+        <div className="ring-inner">
+          <div className="ring-n" style={{fontSize:fsz,color:col}}>{score}</div>
+          <div className="ring-s">/100</div>
+        </div>
+      </div>
+      <div className="ring-lbl">Score crédit</div>
+    </div>
+  );
+}
+
+function Modal({title,onClose,children,lg}){
+  return(
+    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className={`modal${lg?' modal-lg':''}`}>
+        <div className="mh">
+          <div className="m-title">{title}</div>
+          <div className="m-close" onClick={onClose}>✕</div>
+        </div>
+        <div className="mb">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function Toasts({toasts}){
+  return(
+    <div className="toast-cont">
+      {toasts.map(t=>(
+        <div key={t.id} className={`toast toast-${t.type}`}>
+          <span>{t.type==='s'?'✅':t.type==='e'?'❌':'ℹ️'}</span>
+          <span style={{color:'var(--ink)'}}>{t.msg}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PBar({pct,color='var(--lime)',h=4}){
+  return(
+    <div className="pbar-wrap" style={{height:h}}>
+      <div className="pbar-fill" style={{width:pct+'%',background:color,height:h}}/>
+    </div>
+  );
+}
+
+function SectorBadge({secteur}){
+  const s=SECTEURS.find(x=>x.id===secteur)||{label:secteur,ic:'🌿',cls:'ch-gray'};
+  return <span className={`sector-badge ${s.cls}`}>{s.ic} {s.label}</span>;
+}
+/* ── DASHBOARD ── */
+function Dashboard({user,tontines,projets,toast}){
+  const score=calcScore(user);
+  const mesTontines=tontines.filter(t=>t.membres.some(m=>m.uid===user.id));
+  const totalCotis=user.cotisations.filter(c=>c.statut==='payee').reduce((s,c)=>s+c.montant,0);
+  const retards=user.cotisations.filter(c=>c.statut==='retard').length;
+  const creditDispo=Math.max(0,score*1000);
+  const mesInvests=user.investissements||[];
+  const totalInvesti=mesInvests.reduce((s,i)=>s+i.montant,0);
+  const totalRetour=mesInvests.reduce((s,i)=>s+i.retourAttendu,0);
+
+  const secteurInfo=SECTEURS.find(s=>s.id===user.secteur)||SECTEURS[0];
+  const recentActs=[
+    ...user.cotisations.slice(-3).reverse().map(c=>({
+      ic:c.statut==='payee'?'💸':'⚠️',
+      cls:c.statut==='payee'?'act-g':'act-y',
+      text:`Cotisation ${c.statut==='payee'?'payée':'en retard'} — ${c.montant.toLocaleString('fr-FR')} FCFA`,
+      date:c.date
+    })),
+    ...mesInvests.slice(-2).map(i=>{
+      const p=projets.find(x=>x.id===i.projetId);
+      return{ic:'💼',cls:'act-b',text:`Investissement "${p?.nom||'Projet'}" — ${i.montant.toLocaleString('fr-FR')} FCFA`,date:i.date};
+    }),
+  ].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
+
+  return(
+    <div>
+      <div className="ph">
+        <div className="ph-top">
+          <div>
+            <div className="ph-tag">Tableau de bord</div>
+            <div className="ph-title">Bonjour, {user.nom.split(' ')[0]} 👋</div>
+            <div className="ph-sub fcc gap1">
+              <SectorBadge secteur={user.secteur}/>
+              <span className="region-chip">📍 {user.village}, {user.region}</span>
+              <span className="t-xs t-muted">Inscrit le {user.dateInscription}</span>
+            </div>
+          </div>
+          <ScoreRing score={score} sz={90} fsz="1.35rem"/>
+        </div>
+      </div>
+
+      <div className="content">
+        <div className="g4 mb3">
+          <div className="stat" style={{'--glow':'rgba(126,200,69,.07)'}}>
+            <div className="stat-ic">🏦</div>
+            <div className="stat-val">{creditDispo.toLocaleString('fr-FR')}</div>
+            <div className="stat-lbl">Crédit disponible (FCFA)</div>
+            <div className="stat-sub"><span className={score>=40?'up':'dn'}>{score>=40?'✓ Éligible':'✗ Score < 40'}</span></div>
+          </div>
+          <div className="stat" style={{'--glow':'rgba(240,192,64,.07)'}}>
+            <div className="stat-ic">💸</div>
+            <div className="stat-val">{totalCotis.toLocaleString('fr-FR')}</div>
+            <div className="stat-lbl">Total cotisé (FCFA)</div>
+            <div className="stat-sub"><span className="up">↑ {user.cotisations.filter(c=>c.statut==='payee').length} paiements</span></div>
+          </div>
+          <div className="stat" style={{'--glow':'rgba(26,158,142,.07)'}}>
+            <div className="stat-ic">💼</div>
+            <div className="stat-val">{totalInvesti.toLocaleString('fr-FR')}</div>
+            <div className="stat-lbl">Total investi (FCFA)</div>
+            <div className="stat-sub"><span className="up">+{totalRetour.toLocaleString('fr-FR')} FCFA attendus</span></div>
+          </div>
+          <div className="stat" style={{'--glow':'rgba(196,74,42,.07)'}}>
+            <div className="stat-ic">⚠️</div>
+            <div className="stat-val">{retards}</div>
+            <div className="stat-lbl">Retards de paiement</div>
+            <div className="stat-sub"><span className={retards===0?'up':'dn'}>{retards===0?'✓ Parfait':'−'+(retards*5)+' pts'}</span></div>
+          </div>
+        </div>
+
+        <div className="g2 mb3">
+          {/* Score détail */}
+          <div className="card">
+            <div className="card-title">📊 Score IA détaillé</div>
+            <div className="fcc gap2 mb2">
+              <ScoreRing score={score} sz={110} fsz="1.65rem"/>
+              <div style={{flex:1}}>
+                {[
+                  {l:'Taux de paiement',v:Math.round((user.cotisations.filter(c=>c.statut==='payee').length/Math.max(user.cotisations.length,1))*60),m:60},
+                  {l:'Multi-tontines',v:Math.round(Math.min((user.tontines||[]).length/5,1)*12),m:12},
+                  {l:'Volume transactions',v:Math.round(Math.min(user.cotisations.length/24,1)*10),m:10},
+                  {l:'Crédits remboursés',v:Math.round(Math.min((user.credits||[]).filter(c=>c.statut==='rembourse').length/3,1)*10),m:10},
+                  {l:'Investissements',v:Math.round(Math.min((user.investissements||[]).length/2,1)*3),m:3},
+                ].map(item=>(
+                  <div key={item.l} style={{marginBottom:'.48rem'}}>
+                    <div className="fcsb t-xs t-muted mb1">
+                      <span>{item.l}</span>
+                      <span className="mono t-lime">{item.v}/{item.m}</span>
+                    </div>
+                    <PBar pct={item.v/item.m*100}/>
+                  </div>
+                ))}
+                {retards>0&&<div className="t-xs t-rust mt1">⚠ Malus: −{retards*5} pts ({retards} retard{retards>1?'s':''})</div>}
+              </div>
+            </div>
+            <div className="info-box info-lime">
+              💡 Plafond crédit : <strong className="t-gold">{creditDispo.toLocaleString('fr-FR')} FCFA</strong> · score × 1 000 FCFA
+            </div>
+          </div>
+
+          {/* Activité récente */}
+          <div className="card">
+            <div className="card-title">🕐 Activité récente</div>
+            {recentActs.length===0
+              ?<div className="empty"><div className="empty-ic">📭</div><div className="empty-s">Aucune activité pour l'instant</div></div>
+              :recentActs.map((a,i)=>(
+                <div key={i} className="act-item">
+                  <div className={`act-ic ${a.cls}`}>{a.ic}</div>
+                  <div><div className="act-text">{a.text}</div><div className="act-date">{a.date}</div></div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        {/* Mes tontines résumé */}
+        {mesTontines.length>0&&(
+          <div className="card">
+            <div className="card-title">🤝 Mes tontines actives <span>({mesTontines.length})</span></div>
+            <div className="gauto">
+              {mesTontines.map(t=>{
+                const moi=t.membres.find(m=>m.uid===user.id);
+                return(
+                  <div key={t.id} className="card-sm">
+                    <div className="fcsb mb1">
+                      <div className="bold t-sm">{t.nom}</div>
+                      <SectorBadge secteur={t.secteur}/>
+                    </div>
+                    <div className="fcc gap1 t-xs t-muted mb2">
+                      <span>📍 {t.region}</span>
+                      <span>· {t.frequence}</span>
+                    </div>
+                    <div className="fcsb t-xs">
+                      <span className="t-muted">Mon tour</span>
+                      <span className="mono t-gold">N°{moi?.tour} · {moi?.pot?'✓ Reçu':'En attente'}</span>
+                    </div>
+                    <div className="fcsb t-xs mt1">
+                      <span className="t-muted">Pot mensuel</span>
+                      <span className="mono t-lime">{(t.montantCotis*t.membres.length).toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Investissements actifs */}
+        {mesInvests.length>0&&(
+          <div className="card mt3">
+            <div className="card-title">💼 Mes investissements <span>({mesInvests.length})</span></div>
+            <div className="gauto">
+              {mesInvests.map((inv,i)=>{
+                const p=projets.find(x=>x.id===inv.projetId);
+                if(!p)return null;
+                return(
+                  <div key={i} className="card-sm" style={{borderTop:`2px solid var(--gold)`}}>
+                    <div className="bold t-sm mb1">{p.nom}</div>
+                    <div className="fcsb t-xs mb2">
+                      <span className="t-muted">Investi</span>
+                      <span className="mono t-gold">{inv.montant.toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                    <div className="fcsb t-xs mb2">
+                      <span className="t-muted">Retour attendu</span>
+                      <span className="mono t-lime">+{inv.retourAttendu.toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                    <div className="fcsb t-xs">
+                      <span className="t-muted">Rendement</span>
+                      <span className="chip ch-gold">{p.rendementAnnuel}%/an</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── TONTINES ── */
+function Tontines({user,tontines,setTontines,toast}){
+  const [modal,setModal]=useState(null);
+  const [filterSec,setFilterSec]=useState('all');
+  const [filterReg,setFilterReg]=useState('all');
+  const [f,setF]=useState({nom:'',montant:'5000',frequence:'hebdomadaire',nbMax:'10',secteur:user.secteur||'agriculture',region:user.region,desc:''});
+
+  const mesTontines=tontines.filter(t=>t.membres.some(m=>m.uid===user.id));
+  const autresTontines=tontines.filter(t=>!t.membres.some(m=>m.uid===user.id));
+  const filtered=autresTontines.filter(t=>(filterSec==='all'||t.secteur===filterSec)&&(filterReg==='all'||t.region===filterReg));
+
+  const creer=()=>{
+    if(!f.nom||!f.montant)return;
+    const nt={
+      id:'t_'+Date.now(),nom:f.nom,admin:user.id,secteur:f.secteur,region:f.region,
+      montantCotis:+f.montant,frequence:f.frequence,nbMax:+f.nbMax,semaine:1,
+      dateCreation:new Date().toISOString().slice(0,10),statut:'actif',description:f.desc,
+      membres:[{uid:user.id,tour:1,pot:false}]
+    };
+    setTontines(p=>[...p,nt]);
+    toast('Tontine "'+f.nom+'" créée !');
+    setModal(null);
+  };
+
+  const rejoindre=(tid)=>{
+    setTontines(p=>p.map(t=>{
+      if(t.id!==tid)return t;
+      if(t.membres.some(m=>m.uid===user.id)){toast('Déjà membre','e');return t;}
+      if(t.membres.length>=t.nbMax){toast('Tontine complète','e');return t;}
+      toast('Vous avez rejoint "'+t.nom+'" !');
+      return{...t,membres:[...t.membres,{uid:user.id,tour:t.membres.length+1,pot:false}]};
+    }));
+  };
+
+  const TCard=({t,membre})=>{
+    const moi=t.membres.find(m=>m.uid===user.id);
+    const isAdm=t.admin===user.id;
+    const pct=Math.round(t.membres.length/t.nbMax*100);
+    const pot=t.montantCotis*t.membres.length;
+    return(
+      <div className="card" style={{cursor:'default'}}>
+        <div className="fcsb mb1">
+          <div style={{fontFamily:'var(--f-d)',fontSize:'1.05rem',fontWeight:700,color:'var(--ink)'}}>{t.nom}</div>
+          <div className="fcc gap1">
+            {isAdm&&<span className="chip ch-gold">👑 Admin</span>}
+            <span className={`chip ${t.statut==='actif'?'ch-lime':'ch-gray'}`}>{t.statut}</span>
+          </div>
+        </div>
+        <div className="fcc gap2 mb2 t-xs t-muted">
+          <SectorBadge secteur={t.secteur}/>
+          <span className="region-chip">📍 {t.region}</span>
+        </div>
+        {t.description&&<div className="t-xs t-muted mb2" style={{lineHeight:1.65}}>{t.description}</div>}
+        <div className="fcc gap2 mb2 t-xs t-muted flex-wrap">
+          <span>💰 {t.montantCotis.toLocaleString('fr-FR')} FCFA/{t.frequence==='hebdomadaire'?'sem':'mois'}</span>
+          <span>👥 {t.membres.length}/{t.nbMax} membres</span>
+          <span>📅 Tour {t.semaine}</span>
+        </div>
+        <div className="mb2">
+          <div className="fcsb t-xs mb1"><span className="t-muted">Remplissage</span><span className="mono t-lime">{pct}%</span></div>
+          <PBar pct={pct}/>
+        </div>
+        <div className="fcsb">
+          <div className="t-xs t-muted">
+            Pot max : <strong className="t-gold">{pot.toLocaleString('fr-FR')} FCFA</strong>
+            {moi&&<span className="ml1"> · Tour N°{moi.tour}</span>}
+          </div>
+          {!membre
+            ?<button className="btn btn-green btn-sm" onClick={()=>rejoindre(t.id)}>Rejoindre →</button>
+            :<span className="chip ch-lime">✓ Membre</span>
+          }
+        </div>
+      </div>
+    );
+  };
+
+  return(
+    <div>
+      <div className="ph">
+        <div className="ph-top">
+          <div>
+            <div className="ph-tag">Tontines</div>
+            <div className="ph-title">Tontines nationales</div>
+            <div className="ph-sub">Agriculture · Élevage · Mixte · {tontines.length} tontines actives</div>
+          </div>
+          <div className="ph-actions">
+            <button className="btn btn-lime" onClick={()=>setModal('creer')}>+ Créer une tontine</button>
+          </div>
+        </div>
+      </div>
+      <div className="content">
+        {mesTontines.length>0&&(
+          <div className="mb3">
+            <div className="bold t-sm t-muted mb2">Mes tontines ({mesTontines.length})</div>
+            <div className="gauto">{mesTontines.map(t=><TCard key={t.id} t={t} membre={true}/>)}</div>
+          </div>
+        )}
+        <div className="fcsb mb2 flex-wrap gap2">
+          <div className="bold t-sm t-muted">Tontines disponibles ({filtered.length})</div>
+          <div className="fcc gap1">
+            <select className="btn btn-ghost btn-sm" value={filterSec} onChange={e=>setFilterSec(e.target.value)} style={{padding:'.35rem .7rem',background:'var(--s2)',border:'1px solid var(--border2)',borderRadius:'var(--r2)',color:'var(--ink2)',fontFamily:'var(--f-b)',fontSize:'.78rem'}}>
+              <option value="all">Tous secteurs</option>
+              {SECTEURS.map(s=><option key={s.id} value={s.id}>{s.ic} {s.label}</option>)}
+            </select>
+            <select className="btn btn-ghost btn-sm" value={filterReg} onChange={e=>setFilterReg(e.target.value)} style={{padding:'.35rem .7rem',background:'var(--s2)',border:'1px solid var(--border2)',borderRadius:'var(--r2)',color:'var(--ink2)',fontFamily:'var(--f-b)',fontSize:'.78rem'}}>
+              <option value="all">Toutes régions</option>
+              {REGIONS.map(r=><option key={r}>{r}</option>)}
+            </select>
+          </div>
+        </div>
+        {filtered.length>0
+          ?<div className="gauto">{filtered.map(t=><TCard key={t.id} t={t} membre={false}/>)}</div>
+          :<div className="empty"><div className="empty-ic">🔍</div><div className="empty-t">Aucune tontine trouvée</div><div className="empty-s">Modifiez les filtres ou créez la première tontine de votre région</div></div>
+        }
+      </div>
+
+      {modal==='creer'&&(
+        <Modal title="Créer une tontine" onClose={()=>setModal(null)}>
+          <div className="fg"><label>Nom de la tontine</label><input value={f.nom} onChange={e=>setF({...f,nom:e.target.value})} placeholder="Ex: Éleveurs du Ferlo"/></div>
+          <div className="fr">
+            <div className="fg"><label>Secteur</label>
+              <select value={f.secteur} onChange={e=>setF({...f,secteur:e.target.value})}>
+                {SECTEURS.map(s=><option key={s.id} value={s.id}>{s.ic} {s.label}</option>)}
+              </select>
+            </div>
+            <div className="fg"><label>Région</label>
+              <select value={f.region} onChange={e=>setF({...f,region:e.target.value})}>
+                {REGIONS.map(r=><option key={r}>{r}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="fr">
+            <div className="fg"><label>Cotisation (FCFA)</label><input type="number" value={f.montant} onChange={e=>setF({...f,montant:e.target.value})} placeholder="5000"/></div>
+            <div className="fg"><label>Membres max</label><input type="number" value={f.nbMax} onChange={e=>setF({...f,nbMax:e.target.value})} placeholder="10"/></div>
+          </div>
+          <div className="fg"><label>Fréquence</label>
+            <select value={f.frequence} onChange={e=>setF({...f,frequence:e.target.value})}>
+              <option value="hebdomadaire">Hebdomadaire</option>
+              <option value="mensuel">Mensuel</option>
+              <option value="bimensuel">Bimensuel</option>
+            </select>
+          </div>
+          <div className="fg"><label>Description</label><textarea value={f.desc} onChange={e=>setF({...f,desc:e.target.value})} placeholder="Objectif du groupe, types d'activités..."/></div>
+          <div className="frow-btns">
+            <button className="btn btn-ghost" onClick={()=>setModal(null)}>Annuler</button>
+            <button className="btn btn-lime" onClick={creer}>Créer →</button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ── COTISATIONS ── */
+function Cotisations({user,setUser,tontines,toast}){
+  const [modal,setModal]=useState(null);
+  const [sel,setSel]=useState('');
+  const mesTontines=tontines.filter(t=>t.membres.some(m=>m.uid===user.id));
+
+  const payer=()=>{
+    if(!sel)return;
+    const t=tontines.find(x=>x.id===sel);
+    if(!t)return;
+    const nc={id:'c_'+Date.now(),tontineId:sel,montant:t.montantCotis,statut:'payee',date:new Date().toISOString().slice(0,10)};
+    setUser(u=>({...u,cotisations:[...u.cotisations,nc]}));
+    toast('Cotisation de '+t.montantCotis.toLocaleString('fr-FR')+' FCFA enregistrée ! Score recalculé.');
+    setModal(null);setSel('');
+  };
+
+  const all=user.cotisations.map(c=>{
+    const t=tontines.find(x=>x.id===c.tontineId);
+    return{...c,tontineName:t?.nom||'—',secteur:t?.secteur||'agriculture'};
+  }).sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  const totalP=all.filter(c=>c.statut==='payee').reduce((s,c)=>s+c.montant,0);
+  const taux=all.length>0?Math.round(all.filter(c=>c.statut==='payee').length/all.length*100):0;
+  const retards=all.filter(c=>c.statut==='retard').length;
+
+  return(
+    <div>
+      <div className="ph">
+        <div className="ph-top">
+          <div>
+            <div className="ph-tag">Cotisations</div>
+            <div className="ph-title">Historique des paiements</div>
+            <div className="ph-sub">{all.length} cotisation{all.length!==1?'s':''} · Taux : {taux}%</div>
+          </div>
+          <button className="btn btn-lime" onClick={()=>setModal('payer')}>+ Enregistrer paiement</button>
+        </div>
+      </div>
+      <div className="content">
+        <div className="g3 mb3">
+          <div className="stat"><div className="stat-ic">💰</div><div className="stat-val">{totalP.toLocaleString('fr-FR')}</div><div className="stat-lbl">Total cotisé (FCFA)</div></div>
+          <div className="stat">
+            <div className="stat-ic">📈</div><div className="stat-val">{taux}%</div><div className="stat-lbl">Taux de paiement</div>
+            <div className="stat-sub"><span className={taux>=80?'up':'dn'}>{taux>=80?'✓ Excellent':'⚠ À améliorer'}</span></div>
+          </div>
+          <div className="stat"><div className="stat-ic">⚠️</div><div className="stat-val">{retards}</div><div className="stat-lbl">Retards (−{retards*5} pts)</div></div>
+        </div>
+        {all.length===0
+          ?<div className="empty"><div className="empty-ic">💸</div><div className="empty-t">Aucune cotisation</div><div className="empty-s">Enregistrez votre première cotisation pour commencer à construire votre score IA</div></div>
+          :<div className="card">
+            <div className="card-title">Toutes les cotisations</div>
+            <div className="tbl-wrap">
+              <table>
+                <thead><tr><th>Date</th><th>Tontine</th><th>Secteur</th><th>Montant</th><th>Statut</th></tr></thead>
+                <tbody>{all.map(c=>(
+                  <tr key={c.id}>
+                    <td className="mono t-sm">{c.date}</td>
+                    <td className="bold">{c.tontineName}</td>
+                    <td><SectorBadge secteur={c.secteur}/></td>
+                    <td className="mono t-gold">{c.montant.toLocaleString('fr-FR')} FCFA</td>
+                    <td><span className={`chip ${c.statut==='payee'?'ch-lime':c.statut==='retard'?'ch-rust':'ch-gray'}`}>{c.statut}</span></td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          </div>
+        }
+      </div>
+
+      {modal==='payer'&&(
+        <Modal title="Enregistrer une cotisation" onClose={()=>setModal(null)}>
+          <div className="info-box info-teal mb2">
+            💡 En production : paiement déclenché via <strong>Wave Mobile Money</strong>. Enregistrement instantané.
+          </div>
+          <div className="fg"><label>Sélectionner la tontine</label>
+            <select value={sel} onChange={e=>setSel(e.target.value)}>
+              <option value="">— Choisir —</option>
+              {mesTontines.map(t=><option key={t.id} value={t.id}>{t.nom} · {t.montantCotis.toLocaleString('fr-FR')} FCFA</option>)}
+            </select>
+          </div>
+          {sel&&(
+            <div className="card-sm mb2">
+              <div className="fcsb t-sm mb1"><span className="t-muted">Montant</span><span className="mono t-gold">{tontines.find(t=>t.id===sel)?.montantCotis.toLocaleString('fr-FR')} FCFA</span></div>
+              <div className="fcsb t-sm"><span className="t-muted">Date</span><span className="mono">{new Date().toISOString().slice(0,10)}</span></div>
+            </div>
+          )}
+          <div className="frow-btns">
+            <button className="btn btn-ghost" onClick={()=>setModal(null)}>Annuler</button>
+            <button className="btn btn-lime" onClick={payer} disabled={!sel}>✓ Confirmer</button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ── CRÉDITS INTRANTS ── */
+function Credits({user,setUser,toast}){
+  const [modal,setModal]=useState(null);
+  const [f,setF]=useState({intrant:'',montant:'',partenaire:'DER Sénégal'});
+  const score=calcScore(user);
+  const plafond=score*1000;
+  const eligible=score>=40;
+  const credits=user.credits||[];
+
+  const intrantsDispos=user.secteur==='elevage'?INTRANTS_ELEV:user.secteur==='agriculture'?INTRANTS_AGRI:[...INTRANTS_AGRI,...INTRANTS_ELEV];
+
+  const demander=()=>{
+    if(!eligible){toast('Score insuffisant (< 40)','e');return;}
+    const m=+f.montant;
+    if(!m||m<=0){toast('Montant invalide','e');return;}
+    if(m>plafond){toast('Dépasse votre plafond : '+plafond.toLocaleString('fr-FR')+' FCFA','e');return;}
+    if(!f.intrant){toast('Choisissez un intrant','e');return;}
+    const nc={
+      id:'cr_'+Date.now(),montant:m,intrant:f.intrant,partenaire:f.partenaire,
+      statut:'approuve',scoreSnapshot:score,secteur:user.secteur,
+      dateOctroi:new Date().toISOString().slice(0,10),
+      dateEcheance:new Date(Date.now()+180*24*60*60*1000).toISOString().slice(0,10),
+    };
+    setUser(u=>({...u,credits:[...(u.credits||[]),nc]}));
+    toast('✓ Crédit '+m.toLocaleString('fr-FR')+' FCFA approuvé ! Récupérez vos '+f.intrant+'.');
+    setModal(null);setF({intrant:'',montant:'',partenaire:'DER Sénégal'});
+  };
+
+  const rembourser=(id)=>{
+    setUser(u=>({...u,credits:u.credits.map(c=>c.id===id?{...c,statut:'rembourse'}:c)}));
+    toast('✓ Crédit remboursé ! +10 pts au prochain score.');
+  };
+
+  const actifs=credits.filter(c=>c.statut==='approuve');
+  const hist=credits.filter(c=>c.statut!=='approuve');
+
+  return(
+    <div>
+      <div className="ph">
+        <div className="ph-top">
+          <div>
+            <div className="ph-tag">Crédits intrants</div>
+            <div className="ph-title">Financement {user.secteur==='elevage'?'élevage':'agricole'}</div>
+            <div className="ph-sub">Score {score}/100 · Plafond : {plafond.toLocaleString('fr-FR')} FCFA · <SectorBadge secteur={user.secteur}/></div>
+          </div>
+          {eligible&&<button className="btn btn-lime" onClick={()=>setModal('demander')}>+ Demander un crédit</button>}
+        </div>
+      </div>
+      <div className="content">
+        <div className="g3 mb3">
+          <div className="stat" style={{'--glow':eligible?'rgba(126,200,69,.07)':'rgba(196,74,42,.07)'}}>
+            <div className="stat-ic">{eligible?'✅':'❌'}</div>
+            <div className="stat-val" style={{fontSize:'1.2rem',color:eligible?'var(--lime)':'var(--rust2)'}}>{eligible?'Éligible':'Non éligible'}</div>
+            <div className="stat-lbl">Score {score}/100 · Seuil : 40</div>
+          </div>
+          <div className="stat"><div className="stat-ic">💳</div><div className="stat-val">{plafond.toLocaleString('fr-FR')}</div><div className="stat-lbl">Plafond crédit (FCFA)</div></div>
+          <div className="stat"><div className="stat-ic">📋</div><div className="stat-val">{credits.length}</div><div className="stat-lbl">Total crédits</div></div>
+        </div>
+
+        {!eligible&&(
+          <div className="info-box info-gold mb3">
+            <strong>⚠ Score insuffisant</strong> — Score actuel : <strong>{score}/100</strong>. Minimum requis : <strong>40 points</strong>. Continuez à cotiser ponctuellement pour augmenter votre score.
+          </div>
+        )}
+
+        {actifs.length>0&&(
+          <div className="card mb3">
+            <div className="card-title">🟢 Crédits en cours</div>
+            <div className="gauto">
+              {actifs.map(cr=>(
+                <div key={cr.id} className="card-sm" style={{borderTop:'2px solid var(--lime)'}}>
+                  <div className="fcsb mb1">
+                    <div className="t-gold bold" style={{fontFamily:'var(--f-d)',fontSize:'1.3rem'}}>{cr.montant.toLocaleString('fr-FR')} FCFA</div>
+                    <span className="chip ch-lime">En cours</span>
+                  </div>
+                  <div className="t-xs t-muted mb1 uppercase" style={{letterSpacing:'.04em'}}>{cr.intrant} · {cr.partenaire}</div>
+                  <div className="t-xs t-muted mb1">Octroi : {cr.dateOctroi}</div>
+                  <div className="t-xs t-muted mb1">Échéance : <strong className="t-rust">{cr.dateEcheance}</strong></div>
+                  <div className="t-xs t-muted mb2">Score snapshot : <span className="mono t-lime">{cr.scoreSnapshot}/100</span></div>
+                  <button className="btn btn-green btn-sm w100" style={{justifyContent:'center'}} onClick={()=>rembourser(cr.id)}>✓ Marquer remboursé</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {hist.length>0&&(
+          <div className="card">
+            <div className="card-title">Historique crédits</div>
+            <div className="tbl-wrap">
+              <table>
+                <thead><tr><th>Date</th><th>Intrant</th><th>Montant</th><th>Partenaire</th><th>Score</th><th>Statut</th></tr></thead>
+                <tbody>{hist.map(cr=>(
+                  <tr key={cr.id}>
+                    <td className="mono t-sm">{cr.dateOctroi}</td>
+                    <td>{cr.intrant}</td>
+                    <td className="mono t-gold">{cr.montant.toLocaleString('fr-FR')}</td>
+                    <td><span className="chip ch-blue">{cr.partenaire}</span></td>
+                    <td className="mono t-lime">{cr.scoreSnapshot}</td>
+                    <td><span className={`chip ${cr.statut==='rembourse'?'ch-lime':'ch-rust'}`}>{cr.statut}</span></td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {credits.length===0&&<div className="empty"><div className="empty-ic">🌱</div><div className="empty-t">Aucun crédit</div><div className="empty-s">{eligible?'Vous êtes éligible. Demandez votre premier crédit intrants.':'Cotisez régulièrement pour construire votre score.'}</div></div>}
+      </div>
+
+      {modal==='demander'&&(
+        <Modal title="Demander un crédit intrants" onClose={()=>setModal(null)}>
+          <div className="card-sm mb2">
+            <div className="fcsb t-sm mb1"><span className="t-muted">Votre score</span><span className="mono t-lime">{score}/100</span></div>
+            <div className="fcsb t-sm"><span className="t-muted">Plafond disponible</span><span className="mono t-gold">{plafond.toLocaleString('fr-FR')} FCFA</span></div>
+          </div>
+          <div className="fg"><label>Type d'intrant</label>
+            <select value={f.intrant} onChange={e=>setF({...f,intrant:e.target.value})}>
+              <option value="">— Choisir —</option>
+              {intrantsDispos.map(i=><option key={i}>{i}</option>)}
+            </select>
+          </div>
+          <div className="fg"><label>Montant demandé (FCFA)</label>
+            <input type="number" value={f.montant} onChange={e=>setF({...f,montant:e.target.value})} placeholder={'Max : '+plafond.toLocaleString('fr-FR')}/>
+          </div>
+          <div className="fg"><label>Partenaire financeur</label>
+            <select value={f.partenaire} onChange={e=>setF({...f,partenaire:e.target.value})}>
+              {PARTENAIRES.map(p=><option key={p}>{p}</option>)}
+            </select>
+          </div>
+          <div className="frow-btns">
+            <button className="btn btn-ghost" onClick={()=>setModal(null)}>Annuler</button>
+            <button className="btn btn-lime" onClick={demander}>Approuver →</button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   INVESTISSEMENT (MODULE NOUVEAU)
+══════════════════════════════════════════════════════ */
+function Investissement({user,setUser,projets,setProjets,toast}){
+  const [modal,setModal]=useState(null);
+  const [selProjet,setSelProjet]=useState(null);
+  const [montantInvest,setMontantInvest]=useState('');
+  const [filterSec,setFilterSec]=useState('all');
+  const [filterStatut,setFilterStatut]=useState('ouvert');
+  const [filterRisque,setFilterRisque]=useState('all');
+  const [showCreate,setShowCreate]=useState(false);
+  const [fp,setFp]=useState({nom:'',region:'Dakar',secteur:'agriculture',objectif:'',desc:'',rendement:'12',duree:'18',risque:'modere',promoteur:user.nom});
+
+  const mesInvests=user.investissements||[];
+  const totalInvesti=mesInvests.reduce((s,i)=>s+i.montant,0);
+  const totalRetour=mesInvests.reduce((s,i)=>s+i.retourAttendu,0);
+  const score=calcScore(user);
+
+  const projFiltres=projets.filter(p=>
+    (filterSec==='all'||p.secteur===filterSec)&&
+    (filterStatut==='all'||p.statut===filterStatut)&&
+    (filterRisque==='all'||p.risque===filterRisque)
+  );
+
+  const investir=()=>{
+    if(!selProjet)return;
+    const m=+montantInvest;
+    if(!m||m<10000){toast('Minimum 10 000 FCFA','e');return;}
+    if(m>selProjet.objectif-selProjet.collecte){toast('Dépasse le besoin restant','e');return;}
+    const retour=Math.round(m*(1+selProjet.rendementAnnuel/100*(selProjet.dureeMois/12)));
+    const ni={projetId:selProjet.id,montant:m,date:new Date().toISOString().slice(0,10),retourAttendu:retour-m};
+    setUser(u=>({...u,investissements:[...(u.investissements||[]),ni]}));
+    setProjets(p=>p.map(x=>x.id===selProjet.id?{...x,collecte:x.collecte+m,investisseurs:x.investisseurs+1}:x));
+    toast('✓ Investissement de '+m.toLocaleString('fr-FR')+' FCFA confirmé ! Retour attendu : +'+(retour-m).toLocaleString('fr-FR')+' FCFA');
+    setModal(null);setMontantInvest('');setSelProjet(null);
+  };
+
+  const creerProjet=()=>{
+    if(!fp.nom||!fp.objectif||!fp.desc)return;
+    const np={
+      id:'p_'+Date.now(),nom:fp.nom,promoteur:fp.promoteur,region:fp.region,secteur:fp.secteur,
+      description:fp.desc,objectif:+fp.objectif,collecte:0,
+      dateFinancement:new Date(Date.now()+120*24*60*60*1000).toISOString().slice(0,10),
+      rendementAnnuel:+fp.rendement,dureeMois:+fp.duree,risque:fp.risque,
+      investisseurs:0,statut:'ouvert',dateCreation:new Date().toISOString().slice(0,10),updates:[]
+    };
+    setProjets(p=>[...p,np]);
+    toast('Projet "'+fp.nom+'" publié !');
+    setShowCreate(false);
+    setFp({nom:'',region:'Dakar',secteur:'agriculture',objectif:'',desc:'',rendement:'12',duree:'18',risque:'modere',promoteur:user.nom});
+  };
+
+  const risqueColor={faible:'var(--lime)',modere:'var(--gold2)',eleve:'var(--rust2)'};
+  const risqueLabel={faible:'Faible',modere:'Modéré',eleve:'Élevé'};
+  const risqueChip={faible:'ch-lime',modere:'ch-gold',eleve:'ch-rust'};
+
+  const ProjetCard=({p})=>{
+    const pct=Math.round(p.collecte/p.objectif*100);
+    const restant=p.objectif-p.collecte;
+    const dejaInvesti=mesInvests.some(i=>i.projetId===p.id);
+    const colProj=p.secteur==='agriculture'?'var(--lime)':p.secteur==='elevage'?'var(--amber2)':'var(--teal2)';
+    return(
+      <div className="proj-card" style={{'--proj-color':colProj}}>
+        <div className="fcc gap1 mb1 flex-wrap">
+          <SectorBadge secteur={p.secteur}/>
+          <span className="region-chip">📍 {p.region}</span>
+          <span className={`chip ${risqueChip[p.risque]}`}>Risque {risqueLabel[p.risque]}</span>
+          {p.statut==='finance'&&<span className="chip ch-teal">✓ Financé</span>}
+        </div>
+        <div className="proj-name">{p.nom}</div>
+        <div className="proj-promo">Par <strong>{p.promoteur}</strong> · Clôture : {p.dateFinancement}</div>
+        <div className="t-xs t-muted mb2" style={{lineHeight:1.65}}>{p.description}</div>
+        <div className="proj-stats">
+          <div className="proj-stat">
+            <div className="proj-stat-val t-gold">{p.rendementAnnuel}%</div>
+            <div className="proj-stat-lbl">Rendement/an</div>
+          </div>
+          <div className="proj-stat">
+            <div className="proj-stat-val">{p.dureeMois}</div>
+            <div className="proj-stat-lbl">Mois</div>
+          </div>
+          <div className="proj-stat">
+            <div className="proj-stat-val">{p.investisseurs}</div>
+            <div className="proj-stat-lbl">Investisseurs</div>
+          </div>
+        </div>
+        <div className="proj-progress">
+          <div className="proj-prog-head">
+            <span className="t-muted">Collecté</span>
+            <span className="mono t-lime">{pct}% · {p.collecte.toLocaleString('fr-FR')} FCFA</span>
+          </div>
+          <PBar pct={Math.min(pct,100)} color={risqueColor[p.risque]} h={6}/>
+          <div className="fcsb t-xs t-muted mt1">
+            <span>Objectif : {p.objectif.toLocaleString('fr-FR')} FCFA</span>
+            <span>Reste : {restant.toLocaleString('fr-FR')} FCFA</span>
+          </div>
+        </div>
+        {p.updates&&p.updates.length>0&&(
+          <div className="t-xs t-muted mb2">
+            <strong style={{color:'var(--ink2)'}}>Dernière update :</strong> {p.updates[p.updates.length-1]}
+          </div>
+        )}
+        <div className="fcsb">
+          <div className="t-xs t-muted">Min : 10 000 FCFA</div>
+          {dejaInvesti
+            ?<span className="chip ch-teal">✓ Investi</span>
+            :p.statut==='ouvert'
+              ?<button className="btn btn-gold btn-sm" onClick={()=>{setSelProjet(p);setModal('investir');}}>💼 Investir →</button>
+              :<span className="chip ch-gray">Clôturé</span>
+          }
+        </div>
+      </div>
+    );
+  };
+
+  return(
+    <div>
+      <div className="ph">
+        <div className="ph-top">
+          <div>
+            <div className="ph-tag">Investissement</div>
+            <div className="ph-title">Projets agricoles & élevage</div>
+            <div className="ph-sub">Investissez dans des projets vérifiés · Rendement garanti · Secteur agri-élevage</div>
+          </div>
+          <div className="ph-actions">
+            <button className="btn btn-ghost" onClick={()=>setShowCreate(!showCreate)}>{showCreate?'✕ Annuler':'+ Soumettre un projet'}</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="content">
+        {/* Mes stats investissement */}
+        <div className="g3 mb3">
+          <div className="stat" style={{'--glow':'rgba(240,192,64,.08)'}}>
+            <div className="stat-ic">💼</div>
+            <div className="stat-val">{totalInvesti.toLocaleString('fr-FR')}</div>
+            <div className="stat-lbl">Total investi (FCFA)</div>
+          </div>
+          <div className="stat" style={{'--glow':'rgba(126,200,69,.08)'}}>
+            <div className="stat-ic">📈</div>
+            <div className="stat-val">+{totalRetour.toLocaleString('fr-FR')}</div>
+            <div className="stat-lbl">Retours attendus (FCFA)</div>
+            <div className="stat-sub"><span className="up">↑ {mesInvests.length} projet{mesInvests.length!==1?'s':''}</span></div>
+          </div>
+          <div className="stat">
+            <div className="stat-ic">🏆</div>
+            <div className="stat-val">{projets.filter(p=>p.statut==='ouvert').length}</div>
+            <div className="stat-lbl">Projets ouverts</div>
+            <div className="stat-sub"><span className="neu">{projets.length} projets total</span></div>
+          </div>
+        </div>
+
+        {/* Formulaire soumission projet */}
+        {showCreate&&(
+          <div className="card mb3" style={{borderColor:'var(--border3)'}}>
+            <div className="card-title">📤 Soumettre un projet à financer</div>
+            <div className="info-box info-teal mb2 t-sm">
+              Votre projet sera visible par tous les membres de TONTINE+. Décrivez-le précisément pour attirer des investisseurs.
+            </div>
+            <div className="fr">
+              <div className="fg"><label>Nom du projet</label><input value={fp.nom} onChange={e=>setFp({...fp,nom:e.target.value})} placeholder="Ex: Ferme avicole moderne"/></div>
+              <div className="fg"><label>Promoteur</label><input value={fp.promoteur} onChange={e=>setFp({...fp,promoteur:e.target.value})}/></div>
+            </div>
+            <div className="fr">
+              <div className="fg"><label>Secteur</label>
+                <select value={fp.secteur} onChange={e=>setFp({...fp,secteur:e.target.value})}>
+                  {SECTEURS.map(s=><option key={s.id} value={s.id}>{s.ic} {s.label}</option>)}
+                </select>
+              </div>
+              <div className="fg"><label>Région</label>
+                <select value={fp.region} onChange={e=>setFp({...fp,region:e.target.value})}>
+                  {REGIONS.map(r=><option key={r}>{r}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="fg"><label>Description du projet</label><textarea value={fp.desc} onChange={e=>setFp({...fp,desc:e.target.value})} placeholder="Décrivez votre projet, les débouchés commerciaux, les garanties..."/></div>
+            <div className="fr3">
+              <div className="fg"><label>Objectif (FCFA)</label><input type="number" value={fp.objectif} onChange={e=>setFp({...fp,objectif:e.target.value})} placeholder="Ex: 5000000"/></div>
+              <div className="fg"><label>Rendement/an (%)</label><input type="number" value={fp.rendement} onChange={e=>setFp({...fp,rendement:e.target.value})} min="5" max="30"/></div>
+              <div className="fg"><label>Durée (mois)</label><input type="number" value={fp.duree} onChange={e=>setFp({...fp,duree:e.target.value})} min="6" max="60"/></div>
+            </div>
+            <div className="fg"><label>Niveau de risque</label>
+              <select value={fp.risque} onChange={e=>setFp({...fp,risque:e.target.value})}>
+                <option value="faible">Faible (activité existante, revenus réguliers)</option>
+                <option value="modere">Modéré (nouveau projet, marché testé)</option>
+                <option value="eleve">Élevé (innovation, marché à créer)</option>
+              </select>
+            </div>
+            <div className="frow-btns">
+              <button className="btn btn-ghost" onClick={()=>setShowCreate(false)}>Annuler</button>
+              <button className="btn btn-gold" onClick={creerProjet}>Publier le projet →</button>
+            </div>
+          </div>
+        )}
+
+        {/* Filtres */}
+        <div className="fcsb mb2 flex-wrap gap2">
+          <div className="bold t-sm t-muted">Projets disponibles ({projFiltres.length})</div>
+          <div className="fcc gap1 flex-wrap">
+            {[['all','Tous secteurs'],...SECTEURS.map(s=>[s.id,s.ic+' '+s.label])].map(([v,l])=>(
+              <button key={v} className={`btn btn-xs ${filterSec===v?'btn-lime':'btn-ghost'}`} onClick={()=>setFilterSec(v)}>{l}</button>
+            ))}
+          </div>
+        </div>
+        <div className="fcc gap1 mb3 flex-wrap">
+          {[['all','Tous statuts'],['ouvert','Ouverts'],['finance','Financés']].map(([v,l])=>(
+            <button key={v} className={`btn btn-xs ${filterStatut===v?'btn-green':'btn-ghost'}`} onClick={()=>setFilterStatut(v)}>{l}</button>
+          ))}
+          <span className="t-xs t-muted">·</span>
+          {[['all','Tout risque'],['faible','Risque faible'],['modere','Risque modéré'],['eleve','Risque élevé']].map(([v,l])=>(
+            <button key={v} className={`btn btn-xs ${filterRisque===v?'btn-gold':'btn-ghost'}`} onClick={()=>setFilterRisque(v)}>{l}</button>
+          ))}
+        </div>
+
+        {projFiltres.length>0
+          ?<div className="gauto">{projFiltres.map(p=><ProjetCard key={p.id} p={p}/>)}</div>
+          :<div className="empty"><div className="empty-ic">🔍</div><div className="empty-t">Aucun projet</div><div className="empty-s">Modifiez les filtres ou soumettez le premier projet.</div></div>
+        }
+
+        {/* Mes investissements */}
+        {mesInvests.length>0&&(
+          <div className="card mt3">
+            <div className="card-title">💼 Mes investissements ({mesInvests.length})</div>
+            <div className="tbl-wrap">
+              <table>
+                <thead><tr><th>Projet</th><th>Secteur</th><th>Montant</th><th>Retour attendu</th><th>Date</th><th>Statut</th></tr></thead>
+                <tbody>{mesInvests.map((inv,i)=>{
+                  const p=projets.find(x=>x.id===inv.projetId);
+                  return(
+                    <tr key={i}>
+                      <td className="bold">{p?.nom||'—'}</td>
+                      <td>{p&&<SectorBadge secteur={p.secteur}/>}</td>
+                      <td className="mono t-gold">{inv.montant.toLocaleString('fr-FR')} FCFA</td>
+                      <td className="mono t-lime">+{inv.retourAttendu.toLocaleString('fr-FR')} FCFA</td>
+                      <td className="mono t-sm">{inv.date}</td>
+                      <td><span className={`chip ${p?.statut==='finance'?'ch-teal':'ch-gold'}`}>{p?.statut==='finance'?'Financé':'En cours'}</span></td>
+                    </tr>
+                  );
+                })}</tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {modal==='investir'&&selProjet&&(
+        <Modal title={'Investir · '+selProjet.nom} onClose={()=>{setModal(null);setSelProjet(null);setMontantInvest('');}} lg>
+          <div className="g2 mb2">
+            <div>
+              <div className="fcc gap1 mb1 flex-wrap">
+                <SectorBadge secteur={selProjet.secteur}/>
+                <span className={`chip ${risqueChip[selProjet.risque]}`}>Risque {risqueLabel[selProjet.risque]}</span>
+              </div>
+              <div className="t-sm t-muted mb2" style={{lineHeight:1.65}}>{selProjet.description}</div>
+              <div className="card-sm">
+                {[
+                  ['Rendement annuel',selProjet.rendementAnnuel+'%','t-gold'],
+                  ['Durée',selProjet.dureeMois+' mois',''],
+                  ['Collecté',selProjet.collecte.toLocaleString('fr-FR')+' / '+selProjet.objectif.toLocaleString('fr-FR')+' FCFA','t-lime'],
+                  ['Investisseurs',selProjet.investisseurs,''],
+                  ['Clôture',selProjet.dateFinancement,''],
+                ].map(([l,v,cls])=>(
+                  <div key={l} className="fcsb t-sm mb1">
+                    <span className="t-muted">{l}</span>
+                    <span className={`mono bold ${cls}`}>{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="fg"><label>Montant à investir (FCFA)</label>
+                <input type="number" value={montantInvest} onChange={e=>setMontantInvest(e.target.value)} placeholder="Min : 10 000 FCFA"/>
+                <div className="fg-hint">Reste à collecter : {(selProjet.objectif-selProjet.collecte).toLocaleString('fr-FR')} FCFA</div>
+              </div>
+              {montantInvest&&+montantInvest>=10000&&(
+                <div className="card-sm">
+                  <div className="t-xs t-muted bold mb1 uppercase" style={{letterSpacing:'.04em'}}>Simulation de retour</div>
+                  <div className="fcsb t-sm mb1"><span className="t-muted">Capital investi</span><span className="mono">{(+montantInvest).toLocaleString('fr-FR')} FCFA</span></div>
+                  <div className="fcsb t-sm mb1"><span className="t-muted">Retour total ({selProjet.dureeMois} mois)</span><span className="mono t-gold">{Math.round(+montantInvest*(1+selProjet.rendementAnnuel/100*(selProjet.dureeMois/12))).toLocaleString('fr-FR')} FCFA</span></div>
+                  <div className="fcsb t-sm"><span className="t-muted">Gain net</span><span className="mono t-lime">+{Math.round(+montantInvest*(selProjet.rendementAnnuel/100*(selProjet.dureeMois/12))).toLocaleString('fr-FR')} FCFA</span></div>
+                </div>
+              )}
+              <div className="info-box info-gold mt2 t-xs">
+                ⚠ Investissement à risque. Les rendements affichés sont estimatifs. Lisez la description complète du projet avant d'investir.
+              </div>
+            </div>
+          </div>
+          <div className="frow-btns">
+            <button className="btn btn-ghost" onClick={()=>{setModal(null);setSelProjet(null);}}>Annuler</button>
+            <button className="btn btn-gold" onClick={investir} disabled={!montantInvest||+montantInvest<10000}>💼 Confirmer l'investissement →</button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ── ADMIN ── */
+function Admin({user,tontines,setTontines,toast}){
+  const miens=tontines.filter(t=>t.admin===user.id);
+  if(!miens.length)return(
+    <div>
+      <div className="ph"><div className="ph-tag">Administration</div><div className="ph-title">Espace admin</div></div>
+      <div className="content"><div className="empty"><div className="empty-ic">👑</div><div className="empty-t">Aucune tontine à administrer</div><div className="empty-s">Créez une tontine dans l'onglet Tontines pour accéder à l'espace admin.</div></div></div>
+    </div>
+  );
+  return(
+    <div>
+      <div className="ph">
+        <div className="ph-tag">Administration</div>
+        <div className="ph-title">Tableau de bord admin</div>
+        <div className="ph-sub">{miens.length} tontine{miens.length!==1?'s':''} à gérer · Sénégal national</div>
+      </div>
+      <div className="content">
+        {miens.map(t=>{
+          const pot=t.montantCotis*t.membres.length;
+          const pct=Math.round(t.membres.length/t.nbMax*100);
+          return(
+            <div key={t.id} className="card mb3">
+              <div className="fcsb mb3">
+                <div>
+                  <div style={{fontFamily:'var(--f-d)',fontSize:'1.2rem',fontWeight:700}}>{t.nom}</div>
+                  <div className="fcc gap1 mt1"><SectorBadge secteur={t.secteur}/><span className="region-chip">📍 {t.region}</span></div>
+                </div>
+                <span className={`chip ${t.statut==='actif'?'ch-lime':'ch-gray'}`}>{t.statut}</span>
+              </div>
+              <div className="g4 mb3">
+                <div className="card-sm"><div className="t-xs t-muted mb1">Membres</div><div style={{fontFamily:'var(--f-d)',fontSize:'1.5rem',color:'var(--lime)'}}>{t.membres.length}/{t.nbMax}</div><PBar pct={pct} h={3}/></div>
+                <div className="card-sm"><div className="t-xs t-muted mb1">Pot courant</div><div style={{fontFamily:'var(--f-d)',fontSize:'1.1rem',color:'var(--gold2)'}}>{pot.toLocaleString('fr-FR')}</div><div className="t-xs t-muted">FCFA</div></div>
+                <div className="card-sm"><div className="t-xs t-muted mb1">Tour courant</div><div style={{fontFamily:'var(--f-d)',fontSize:'1.5rem'}}>{t.semaine}</div></div>
+                <div className="card-sm"><div className="t-xs t-muted mb1">Ont reçu le pot</div><div style={{fontFamily:'var(--f-d)',fontSize:'1.5rem',color:'var(--lime)'}}>{t.membres.filter(m=>m.pot).length}/{t.membres.length}</div></div>
+              </div>
+              <div className="tbl-wrap">
+                <table>
+                  <thead><tr><th>Membre</th><th>Tour</th><th>Pot reçu</th><th>Statut</th><th>Action</th></tr></thead>
+                  <tbody>{t.membres.map((m,i)=>(
+                    <tr key={m.uid}>
+                      <td className="bold">{m.nom||(m.uid===user.id?user.nom:'Membre '+(i+1))}</td>
+                      <td><span className="chip ch-gray">N°{m.tour}</span></td>
+                      <td>{m.pot?<span className="chip ch-lime">✓ Reçu</span>:<span className="chip ch-gray">En attente</span>}</td>
+                      <td><span className="chip ch-lime">Actif</span></td>
+                      <td>
+                        <button className="btn btn-danger btn-xs" onClick={()=>toast('Retard marqué — membre pénalisé','i')}>Retard</button>
+                      </td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── PROFIL ── */
+function Profil({user,setUser,toast}){
+  const [edit,setEdit]=useState(false);
+  const [f,setF]=useState({nom:user.nom,village:user.village,region:user.region,secteur:user.secteur});
+  const score=calcScore(user);
+  const next=score<40?40:score<65?65:100;
+
+  const save=()=>{setUser(u=>({...u,...f}));setEdit(false);toast('Profil mis à jour !');};
+
+  return(
+    <div>
+      <div className="ph">
+        <div className="ph-tag">Mon profil</div>
+        <div className="ph-title">{user.nom}</div>
+        <div className="ph-sub fcc gap1"><SectorBadge secteur={user.secteur}/><span className="region-chip">📍 {user.village}, {user.region}</span></div>
+      </div>
+      <div className="content">
+        <div className="g2">
+          <div className="card">
+            <div className="card-title">Informations personnelles</div>
+            {!edit?(
+              <>
+                {[['Nom',user.nom],['Téléphone',user.telephone],['Village',user.village],['Région',user.region],['Secteur',user.secteur],['Rôle',user.role],['Inscription',user.dateInscription]].map(([l,v])=>(
+                  <div key={l} className="fcsb" style={{padding:'.52rem 0',borderBottom:'1px solid var(--border)'}}>
+                    <span className="t-xs t-muted">{l}</span><span className="t-sm bold">{v}</span>
+                  </div>
+                ))}
+                <div className="mt2"><button className="btn btn-ghost btn-sm" onClick={()=>setEdit(true)}>✏ Modifier</button></div>
+              </>
+            ):(
+              <>
+                <div className="fg"><label>Nom</label><input value={f.nom} onChange={e=>setF({...f,nom:e.target.value})}/></div>
+                <div className="fg"><label>Village</label><input value={f.village} onChange={e=>setF({...f,village:e.target.value})}/></div>
+                <div className="fg"><label>Région</label><select value={f.region} onChange={e=>setF({...f,region:e.target.value})}>{REGIONS.map(r=><option key={r}>{r}</option>)}</select></div>
+                <div className="fg"><label>Secteur</label><select value={f.secteur} onChange={e=>setF({...f,secteur:e.target.value})}>{SECTEURS.map(s=><option key={s.id} value={s.id}>{s.ic} {s.label}</option>)}</select></div>
+                <div className="frow-btns"><button className="btn btn-ghost" onClick={()=>setEdit(false)}>Annuler</button><button className="btn btn-lime" onClick={save}>Sauvegarder</button></div>
+              </>
+            )}
+          </div>
+          <div>
+            <div className="card mb2">
+              <div className="card-title">Score IA</div>
+              <div className="fcc gap2 mb2">
+                <ScoreRing score={score} sz={110} fsz="1.65rem"/>
+                <div>
+                  <span className={`chip ${score>=65?'ch-lime':score>=40?'ch-gold':'ch-rust'} mb1`} style={{display:'inline-flex'}}>{score>=65?'🌟 Excellent':score>=40?'✅ Éligible':'⚠ Insuffisant'}</span>
+                  <div className="t-xs t-muted mt1">Plafond : <strong className="t-gold">{(score*1000).toLocaleString('fr-FR')} FCFA</strong></div>
+                  {score<100&&<div className="t-xs t-lime mt1">+{next-score} pts → palier {next}</div>}
+                </div>
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-title">Statistiques</div>
+              {[
+                ['Cotisations totales',user.cotisations.length],
+                ['Payées',user.cotisations.filter(c=>c.statut==='payee').length],
+                ['Retards',user.cotisations.filter(c=>c.statut==='retard').length],
+                ['Tontines',(user.tontines||[]).length],
+                ['Crédits',(user.credits||[]).length],
+                ['Remboursés',(user.credits||[]).filter(c=>c.statut==='rembourse').length],
+                ['Investissements',(user.investissements||[]).length],
+              ].map(([l,v])=>(
+                <div key={l} className="fcsb" style={{padding:'.44rem 0',borderBottom:'1px solid var(--border)'}}>
+                  <span className="t-xs t-muted">{l}</span><span className="mono t-sm t-lime">{v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   LOGIN — avec Supabase
+══════════════════════════════════════════════════════ */
+function Login({onLogin}){
+  const [tab,setTab]=useState('paysan');
+  const [f,setF]=useState({nom:'',tel:'',village:'',region:'Dakar',secteur:'agriculture',role:'paysan'});
+  const [err,setErr]=useState('');
+  const [loading,setLoading]=useState(false);
+
+  const loginDemo = async (secteur) => {
+    setLoading(true); setErr('');
+    try {
+      // Chercher un user démo existant en DB
+      const { data } = await sb.from('users').select('*').eq('secteur',secteur).limit(1);
+      let u = data && data.length > 0 ? data[0] : null;
+      if (!u) {
+        // Créer un user démo si la DB est vide
+        const demoNames = {agriculture:'Baye Sène',elevage:'Ousmane Diallo',mixte:'Mariama Diallo',admin:'Mariama Diallo'};
+        const demoVilles = {agriculture:'Touba Toul',elevage:'Linguère',mixte:'Bambey',admin:'Bambey'};
+        const demoRegions = {agriculture:'Diourbel',elevage:'Louga',mixte:'Diourbel',admin:'Diourbel'};
+        const { data: nu, error } = await sb.from('users').insert({
+          clerk_id: 'demo_'+secteur+'_'+Date.now(),
+          nom: demoNames[secteur]||'Demo User',
+          telephone: '+22177'+Math.floor(Math.random()*9000000+1000000),
+          village: demoVilles[secteur]||'Dakar',
+          region: demoRegions[secteur]||'Dakar',
+          secteur: secteur==='admin'?'mixte':secteur,
+          role: secteur==='admin'?'admin':'paysan',
+        }).select().single();
+        if (error) { setErr('Erreur: '+error.message); setLoading(false); return; }
+        u = nu;
+      }
+      const extra = await loadUserData(u.id);
+      onLogin(dbUser(u, extra));
+    } catch(e) { setErr(e.message); }
+    setLoading(false);
+  };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!f.nom||!f.tel||!f.village) { setErr('Tous les champs sont requis'); return; }
+    if (!f.tel.match(/^\+221(70|75|76|77|78)\d{7}$/)) { setErr('Numéro invalide (+221 7X XXXXXXX)'); return; }
+    setLoading(true); setErr('');
+    try {
+      // Chercher si le numéro existe déjà
+      const { data:existing } = await sb.from('users').select('*').eq('telephone',f.tel).single();
+      let u;
+      if (existing) {
+        u = existing;
+      } else {
+        const { data:nu, error } = await sb.from('users').insert({
+          clerk_id: 'phone_'+f.tel.replace('+',''),
+          nom: f.nom, telephone: f.tel,
+          village: f.village, region: f.region,
+          secteur: f.secteur, role: tab==='admin'?'admin':'paysan',
+        }).select().single();
+        if (error) { setErr('Erreur inscription: '+error.message); setLoading(false); return; }
+        u = nu;
+      }
+      const extra = await loadUserData(u.id);
+      onLogin(dbUser(u, extra));
+    } catch(e) { setErr(e.message); }
+    setLoading(false);
+  };
+
+  return(
+    <div className="login-bg">
+      <div className="login-card">
+        <div className="login-logo">TONTINE<b>+</b></div>
+        <div className="login-sub">Plateforme nationale de tontines agricoles<br/>Agriculture · Élevage · Investissement · Sénégal 🗄</div>
+        <div className="login-flags">
+          {SECTEURS.map(s=><span key={s.id} className={`sector-badge ${s.cls}`} style={{fontSize:'.62rem'}}>{s.ic} {s.label}</span>)}
+          <span className="login-flag">📍 14 régions</span>
+          <span className="login-flag" style={{background:'rgba(26,158,142,.15)',color:'var(--teal2)',border:'1px solid rgba(26,158,142,.25)'}}>🗄 Supabase Live</span>
+        </div>
+        <div className="tabs">
+          <div className={`tab ${tab==='paysan'?'on':''}`} onClick={()=>{setTab('paysan');setF(p=>({...p,role:'paysan'}))}}>👨‍🌾 Producteur</div>
+          <div className={`tab ${tab==='eleveur'?'on':''}`} onClick={()=>{setTab('eleveur');setF(p=>({...p,role:'paysan',secteur:'elevage'}))}}>🐄 Éleveur</div>
+          <div className={`tab ${tab==='admin'?'on':''}`} onClick={()=>{setTab('admin');setF(p=>({...p,role:'admin'}))}}>👑 Admin</div>
+        </div>
+        <form onSubmit={submit}>
+          <div className="fg"><label>Nom complet</label><input value={f.nom} onChange={e=>setF({...f,nom:e.target.value})} placeholder="Ex: Baye Sène" disabled={loading}/></div>
+          <div className="fg"><label>Téléphone (+221)</label><input value={f.tel} onChange={e=>setF({...f,tel:e.target.value})} placeholder="+221771234567" disabled={loading}/></div>
+          <div className="fr">
+            <div className="fg"><label>Village / Ville</label><input value={f.village} onChange={e=>setF({...f,village:e.target.value})} placeholder="Ex: Linguère" disabled={loading}/></div>
+            <div className="fg"><label>Région</label><select value={f.region} onChange={e=>setF({...f,region:e.target.value})} disabled={loading}>{REGIONS.map(r=><option key={r}>{r}</option>)}</select></div>
+          </div>
+          <div className="fg"><label>Secteur d'activité</label>
+            <select value={f.secteur} onChange={e=>setF({...f,secteur:e.target.value})} disabled={loading}>
+              {SECTEURS.map(s=><option key={s.id} value={s.id}>{s.ic} {s.label}</option>)}
+            </select>
+          </div>
+          {err&&<div className="t-sm t-rust mb1">⚠ {err}</div>}
+          <button type="submit" className="btn btn-lime w100" style={{justifyContent:'center',padding:'.72rem',marginTop:'.25rem'}} disabled={loading}>
+            {loading?'⏳ Connexion en cours...':'Créer mon compte →'}
+          </button>
+        </form>
+        <div className="demo-btns">
+          <div className="demo-label">🎯 Démo rapide — données sauvegardées en DB</div>
+          <div className="demo-grid">
+            <button className="btn btn-ghost btn-sm" onClick={()=>loginDemo('agriculture')} disabled={loading}>👨‍🌾 Paysan</button>
+            <button className="btn btn-ghost btn-sm" onClick={()=>loginDemo('elevage')} disabled={loading}>🐄 Éleveur</button>
+            <button className="btn btn-ghost btn-sm" onClick={()=>loginDemo('admin')} disabled={loading}>👑 Admin</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   APP ROOT — avec Supabase + Realtime
+══════════════════════════════════════════════════════ */
+function App(){
+  // ── TOUS LES HOOKS EN PREMIER — jamais après un return conditionnel ──
+  const [user,setUser]         = useState(null);
+  const [page,setPage]         = useState('dashboard');
+  const [tontines,setTontines] = useState([]);
+  const [projets,setProjets]   = useState([]);
+  const [appLoading,setAppLoading] = useState(false);
+  const {toasts,add:toast}     = useToast();
+
+  // Chargement initial après login
+  useEffect(()=>{
+    if (!user) { setTontines([]); setProjets([]); return; }
+    setAppLoading(true);
+    Promise.all([sbFetchTontines(), sbFetchProjets()]).then(([t,p])=>{
+      setTontines(t);
+      setProjets(p);
+      setAppLoading(false);
+    });
+  },[user && user.id]);
+
+  // Realtime : cotisations
+  useEffect(()=>{
+    if (!user) return;
+    const ch = sb.channel('rt_cotis_'+user.id)
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'cotisations'},
+        async (payload)=>{
+          if (payload.new.user_id === user.id) {
+            const extra = await loadUserData(user.id);
+            setUser(u=>({...u,...extra}));
+          } else {
+            toast('💸 Nouvelle cotisation dans votre tontine !','i');
+            sbFetchTontines().then(t=>setTontines(t));
+          }
+        })
+      .subscribe();
+    return ()=>sb.removeChannel(ch);
+  },[user && user.id]);
+
+  // Realtime : projets
+  useEffect(()=>{
+    if (!user) return;
+    const ch = sb.channel('rt_projets_'+user.id)
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'projets'},
+        (payload)=>setProjets(prev=>prev.map(p=>p.id===payload.new.id?dbProjet(payload.new):p)))
+      .subscribe();
+    return ()=>sb.removeChannel(ch);
+  },[user && user.id]);
+
+  // Wrapper setTontines → Supabase
+  const setTontinesWrapper = useCallback(async (updaterOrFn)=>{
+    if (typeof updaterOrFn !== 'function') { setTontines(updaterOrFn); return; }
+    setTontines(prev=>{
+      const next = updaterOrFn(prev);
+      const added = next.find(t=>!prev.find(p=>p.id===t.id));
+      if (added) {
+        // Créer tontine en DB
+        sbCreerTontine(user,{
+          nom:added.nom, secteur:added.secteur, region:added.region,
+          montant:added.montantCotis, frequence:added.frequence,
+          nbMax:added.nbMax, desc:added.description,
+        }).then(()=>Promise.all([sbFetchTontines(),loadUserData(user.id)])).then(([t,extra])=>{
+          setTontines(t);
+          setUser(u=>({...u,...extra}));
+          toast('Tontine "'+added.nom+'" créée !');
+        }).catch(e=>toast('Erreur: '+e.message,'e'));
+        return prev; // ne pas muter l'état local avant la réponse DB
+      }
+      // Rejoindre une tontine
+      const changed = next.find((t,i)=>t.membres.length > (prev[i]?.membres.length||0));
+      if (changed) {
+        const origTontine = prev.find(t=>t.id===changed.id);
+        if (origTontine) {
+          sbRejoindre(user.id, origTontine)
+            .then(()=>Promise.all([sbFetchTontines(),loadUserData(user.id)]))
+            .then(([t,extra])=>{
+              setTontines(t);
+              setUser(u=>({...u,...extra}));
+              toast('Vous avez rejoint "'+changed.nom+'" !');
+            }).catch(e=>toast(e.message,'e'));
+        }
+        return prev;
+      }
+      return next;
+    });
+  },[user, tontines]);
+
+  // Wrapper setUser → Supabase
+  const setUserWrapper = useCallback(async (updaterOrObj)=>{
+    if (typeof updaterOrObj !== 'function') {
+      // Mise à jour profil
+      sbUpdateProfil(user.id, updaterOrObj)
+        .then(()=>setUser(u=>({...u,...updaterOrObj})))
+        .catch(e=>toast('Erreur profil: '+e.message,'e'));
+      return;
+    }
+    const next = updaterOrObj(user);
+
+    // Nouvelle cotisation ?
+    if ((next.cotisations||[]).length > (user.cotisations||[]).length) {
+      const nc = next.cotisations.find(c=>!(user.cotisations||[]).find(pc=>pc.id===c.id));
+      if (nc) {
+        const tontine = tontines.find(t=>t.id===nc.tontineId);
+        if (!tontine) return;
+        sbPayerCotis(user.id, tontine)
+          .then(()=>loadUserData(user.id))
+          .then(extra=>{ setUser(u=>({...u,...extra})); toast('Cotisation de '+tontine.montantCotis.toLocaleString('fr-FR')+' FCFA enregistrée !'); })
+          .catch(e=>toast('Erreur cotisation: '+e.message,'e'));
+        return;
+      }
+    }
+    // Nouveau crédit ?
+    if ((next.credits||[]).length > (user.credits||[]).length) {
+      const nc = next.credits.find(c=>!(user.credits||[]).find(pc=>pc.id===c.id));
+      if (nc) {
+        const score = calcScore(user);
+        sbDemanderCredit(user.id,{montant:String(nc.montant),intrant:nc.intrant,partenaire:nc.partenaire},score)
+          .then(()=>loadUserData(user.id))
+          .then(extra=>{ setUser(u=>({...u,...extra})); toast('✓ Crédit '+nc.montant.toLocaleString('fr-FR')+' FCFA approuvé !'); })
+          .catch(e=>toast('Erreur crédit: '+e.message,'e'));
+        return;
+      }
+    }
+    // Remboursement ?
+    const remb = (next.credits||[]).find(c=>c.statut==='rembourse'&&(user.credits||[]).find(pc=>pc.id===c.id&&pc.statut!=='rembourse'));
+    if (remb) {
+      sbRembourser(remb.id)
+        .then(()=>loadUserData(user.id))
+        .then(extra=>{ setUser(u=>({...u,...extra})); toast('✓ Crédit remboursé !'); })
+        .catch(e=>toast('Erreur: '+e.message,'e'));
+      return;
+    }
+    // Nouvel investissement ?
+    if ((next.investissements||[]).length > (user.investissements||[]).length) {
+      const ni = next.investissements.find(i=>!(user.investissements||[]).find(pi=>pi.projetId===i.projetId&&pi.date===i.date));
+      if (ni) {
+        const projet = projets.find(p=>p.id===ni.projetId);
+        if (!projet) return;
+        sbInvestir(user.id,projet,ni.montant)
+          .then(()=>Promise.all([loadUserData(user.id),sbFetchProjets()]))
+          .then(([extra,p])=>{ setUser(u=>({...u,...extra})); setProjets(p); toast('✓ Investissement de '+ni.montant.toLocaleString('fr-FR')+' FCFA confirmé !'); })
+          .catch(e=>toast('Erreur investissement: '+e.message,'e'));
+        return;
+      }
+    }
+    setUser(next);
+  },[user, tontines, projets]);
+
+  // Wrapper setProjets → Supabase
+  const setProjetsWrapper = useCallback(async (updaterOrFn)=>{
+    if (typeof updaterOrFn !== 'function') { setProjets(updaterOrFn); return; }
+    const next = updaterOrFn(projets);
+    const added = next.find(p=>!projets.find(pp=>pp.id===p.id));
+    if (added) {
+      sbCreerProjet(user.id,{
+        nom:added.nom, promoteur:added.promoteur||user.nom, region:added.region,
+        secteur:added.secteur, desc:added.description,
+        objectif:String(added.objectif), rendement:String(added.rendementAnnuel),
+        duree:String(added.dureeMois), risque:added.risque,
+      })
+      .then(()=>sbFetchProjets())
+      .then(p=>{ setProjets(p); toast('Projet "'+added.nom+'" publié !'); })
+      .catch(e=>toast('Erreur projet: '+e.message,'e'));
+    }
+  },[projets, user]);
+
+  // ── RETOURS CONDITIONNELS — après tous les hooks ─────────────
+  if (!user) return (
+    <>
+      <Login onLogin={u=>{setUser(u);setPage('dashboard');}}/>
+      <Toasts toasts={toasts}/>
+    </>
+  );
+
+  if (appLoading) return (
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)',flexDirection:'column',gap:'1rem'}}>
+      <div style={{fontFamily:'var(--f-d)',fontSize:'2.5rem',color:'var(--lime)'}}>TONTINE+</div>
+      <div style={{color:'var(--ink3)',fontSize:'.9rem'}}>⏳ Chargement depuis Supabase...</div>
+    </div>
+  );
+
+  const score = calcScore(user);
+  const isAdm = tontines.some(t=>t.admin===user.id)||user.role==='admin';
+  const openInvests = projets.filter(p=>p.statut==='ouvert').length;
+  const getSectorAv = ()=>{ const s=SECTEURS.find(x=>x.id===user.secteur); return s?s.ic:'🌾'; };
+
+  const nav=[
+    {id:'dashboard',ic:'🏠',label:'Tableau de bord'},
+    {id:'tontines',ic:'🤝',label:'Tontines'},
+    {id:'cotisations',ic:'💸',label:'Cotisations'},
+    {id:'credits',ic:'🌱',label:'Crédits intrants',dot:score<40?'!':null,dotCls:'dot-gold'},
+    {id:'investissement',ic:'💼',label:'Investissement',dot:openInvests>0?openInvests:null,dotCls:'dot-green'},
+    ...(isAdm?[{id:'admin',ic:'👑',label:'Administration'}]:[]),
+    {id:'profil',ic:'👤',label:'Mon profil'},
+  ];
+
+  const pages={
+    dashboard:<Dashboard user={user} tontines={tontines} projets={projets} toast={toast}/>,
+    tontines:<Tontines user={user} tontines={tontines} setTontines={setTontinesWrapper} toast={toast}/>,
+    cotisations:<Cotisations user={user} setUser={setUserWrapper} tontines={tontines} toast={toast}/>,
+    credits:<Credits user={user} setUser={setUserWrapper} toast={toast}/>,
+    investissement:<Investissement user={user} setUser={setUserWrapper} projets={projets} setProjets={setProjetsWrapper} toast={toast}/>,
+    admin:<Admin user={user} tontines={tontines} setTontines={setTontinesWrapper} toast={toast}/>,
+    profil:<Profil user={user} setUser={setUserWrapper} toast={toast}/>,
+  };
+
+  const scoreColor=score>=65?'var(--lime)':score>=40?'var(--gold2)':'var(--rust2)';
+
+  return(
+    <div className="app">
+      <div className="sidebar">
+        <div className="sb-brand">
+          <div className="sb-logo">TONTINE<span>+</span></div>
+          <div className="sb-tagline">Plateforme nationale</div>
+          <div className="sb-flag">🇸🇳 Sénégal · 14 régions</div>
+          <div className="sb-flag" style={{marginTop:'.25rem',background:'rgba(26,158,142,.12)',color:'var(--teal2)',borderColor:'rgba(26,158,142,.25)'}}>🗄 Supabase Live</div>
+        </div>
+        <div className="sb-user">
+          <div className="fcc gap2 mb1">
+            <div className="sb-av" style={{background:'linear-gradient(135deg,var(--s3),var(--s4))'}}>{getSectorAv()}</div>
+            <div>
+              <div className="sb-uname">{user.nom}</div>
+              <div className="sb-usub">📍 {user.village} · {user.region}</div>
+            </div>
+          </div>
+          <div className="sb-score-row">
+            <div className="sb-score-track"><div className="sb-score-fill" style={{width:score+'%',background:scoreColor}}/></div>
+            <div className="sb-score-num" style={{color:scoreColor}}>{score}/100</div>
+          </div>
+          <div className="fcc gap1 mt1"><SectorBadge secteur={user.secteur}/></div>
+        </div>
+        <div className="sb-nav">
+          <div className="sb-sec">Navigation</div>
+          {nav.map(item=>(
+            <div key={item.id} className={`sb-item ${page===item.id?'on':''}`} onClick={()=>setPage(item.id)}>
+              <span className="sb-ic">{item.ic}</span>{item.label}
+              {item.dot&&<span className={`sb-dot ${item.dotCls||'dot-red'}`}>{item.dot}</span>}
+            </div>
+          ))}
+        </div>
+        <div className="sb-foot">
+          <div className="sb-logout" onClick={()=>{setUser(null);setPage('dashboard');}}>
+            <span>🚪</span> Déconnexion
+          </div>
+          <div className="sb-version">
+            🗄 Supabase · ☁️ Vercel<br/>
+            <span style={{color:'var(--lime)'}}>v2.1 · Données persistantes</span>
+          </div>
+        </div>
+      </div>
+      <div className="main">{pages[page]||pages.dashboard}</div>
+      <Toasts toasts={toasts}/>
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>,document.getElementById('root'));
+</script>
+</body>
+</html>
