@@ -2733,6 +2733,726 @@ function OutilsAgricoles({user, toast}) {
   );
 }
 
+
+/* ══════════════════════════════════════════════════════
+   ANNUAIRE — Vétérinaires & Agronomes
+══════════════════════════════════════════════════════ */
+const ANNUAIRE_DATA = [
+  {id:'a1',nom:'Dr. Mamadou Diallo',type:'veterinaire',specialite:'Bovins & Ovins',region:'Louga',ville:'Linguère',telephone:'+221 77 123 45 67',disponible:true,note:4.8,avis:32},
+  {id:'a2',nom:'Dr. Fatou Seck',type:'veterinaire',specialite:'Volaille & Porcins',region:'Thiès',ville:'Mbour',telephone:'+221 76 234 56 78',disponible:true,note:4.6,avis:18},
+  {id:'a3',nom:'Dr. Ibrahima Ba',type:'veterinaire',specialite:'Caprins & Camelins',region:'Saint-Louis',ville:'Podor',telephone:'+221 70 345 67 89',disponible:false,note:4.5,avis:24},
+  {id:'a4',nom:'Ousmane Ndiaye',type:'agronome',specialite:'Céréales & Arachide',region:'Diourbel',ville:'Touba',telephone:'+221 77 456 78 90',disponible:true,note:4.9,avis:41},
+  {id:'a5',nom:'Aissatou Diop',type:'agronome',specialite:'Maraîchage & Irrigation',region:'Saint-Louis',ville:'Richard Toll',telephone:'+221 78 567 89 01',disponible:true,note:4.7,avis:29},
+  {id:'a6',nom:'Dr. Moussa Cissé',type:'veterinaire',specialite:'Bovins & Équidés',region:'Tambacounda',ville:'Tambacounda',telephone:'+221 75 678 90 12',disponible:true,note:4.4,avis:15},
+  {id:'a7',nom:'Mariama Sarr',type:'agronome',specialite:'Riziculture & Cultures de décrues',region:'Ziguinchor',ville:'Ziguinchor',telephone:'+221 77 789 01 23',disponible:true,note:4.8,avis:37},
+  {id:'a8',nom:'Aliou Mbaye',type:'agronome',specialite:'Arachide & Mil',region:'Kaolack',ville:'Kaolack',telephone:'+221 76 890 12 34',disponible:false,note:4.3,avis:22},
+  {id:'a9',nom:'Dr. Cheikh Fall',type:'veterinaire',specialite:'Volaille & Petits ruminants',region:'Dakar',ville:'Pikine',telephone:'+221 78 901 23 45',disponible:true,note:4.6,avis:55},
+  {id:'a10',nom:'Rokhaya Gaye',type:'agronome',specialite:'Horticulture & Fruits',region:'Thiès',ville:'Thiès',telephone:'+221 70 012 34 56',disponible:true,note:4.5,avis:19},
+  {id:'a11',nom:'Dr. Abdou Koné',type:'veterinaire',specialite:'Bovins laitiers',region:'Kolda',ville:'Kolda',telephone:'+221 77 111 22 33',disponible:true,note:4.7,avis:28},
+  {id:'a12',nom:'Seydou Niang',type:'agronome',specialite:'Sorgho & Niébé',region:'Kaffrine',ville:'Kaffrine',telephone:'+221 76 222 33 44',disponible:true,note:4.4,avis:16},
+];
+
+function Annuaire({user, toast}) {
+  const [filterType, setFilterType] = React.useState('all');
+  const [filterReg, setFilterReg] = React.useState('all');
+  const [search, setSearch] = React.useState('');
+  const [sel, setSel] = React.useState(null);
+
+  const filtered = ANNUAIRE_DATA.filter(a => {
+    if (filterType !== 'all' && a.type !== filterType) return false;
+    if (filterReg !== 'all' && a.region !== filterReg) return false;
+    if (search && !a.nom.toLowerCase().includes(search.toLowerCase()) &&
+        !a.specialite.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  const waveLink = (tel) => 'https://wa.me/' + tel.replace(/\D/g,'');
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-tag">Annuaire</div>
+        <div className="ph-title">👨‍⚕️ Vétérinaires & Agronomes</div>
+        <div className="ph-sub">Trouvez un expert près de chez vous · Contact direct WhatsApp</div>
+      </div>
+      <div className="content">
+        <div style={{display:'flex',gap:'.5rem',flexWrap:'wrap',marginBottom:'1rem'}}>
+          <input placeholder="🔍 Nom ou spécialité..." value={search} onChange={e=>setSearch(e.target.value)}
+            style={{flex:'1',minWidth:'160px',padding:'.5rem .75rem',borderRadius:'8px',border:'1px solid var(--border)',background:'var(--card)',color:'var(--ink)',fontSize:'.85rem'}}/>
+          <select value={filterType} onChange={e=>setFilterType(e.target.value)}
+            style={{padding:'.5rem',borderRadius:'8px',border:'1px solid var(--border)',background:'var(--card)',color:'var(--ink)',fontSize:'.82rem'}}>
+            <option value="all">Tous</option>
+            <option value="veterinaire">🩺 Vétérinaires</option>
+            <option value="agronome">🌱 Agronomes</option>
+          </select>
+          <select value={filterReg} onChange={e=>setFilterReg(e.target.value)}
+            style={{padding:'.5rem',borderRadius:'8px',border:'1px solid var(--border)',background:'var(--card)',color:'var(--ink)',fontSize:'.82rem'}}>
+            <option value="all">Toutes régions</option>
+            {REGIONS.map(r=><option key={r}>{r}</option>)}
+          </select>
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:'1rem'}}>
+          {filtered.map(a => (
+            <div key={a.id} className="card" style={{cursor:'pointer',border:`1px solid ${a.type==='veterinaire'?'rgba(21,101,192,.2)':'rgba(90,158,32,.2)'}`}}
+              onClick={()=>setSel(sel?.id===a.id?null:a)}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'.5rem'}}>
+                <div style={{fontSize:'1.8rem'}}>{a.type==='veterinaire'?'🩺':'🌱'}</div>
+                <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:'.2rem'}}>
+                  <span style={{fontSize:'.7rem',fontWeight:700,padding:'.15rem .5rem',borderRadius:'99px',
+                    background:a.disponible?'rgba(90,158,32,.12)':'rgba(196,74,42,.12)',
+                    color:a.disponible?'var(--lime)':'var(--rust2)'}}>
+                    {a.disponible?'✅ Disponible':'⛔ Indisponible'}
+                  </span>
+                  <span style={{fontSize:'.72rem',color:'var(--gold2)'}}>{'★'.repeat(Math.round(a.note))} {a.note}/5</span>
+                </div>
+              </div>
+              <div style={{fontWeight:700,fontSize:'1rem',color:'var(--ink)',marginBottom:'.2rem'}}>{a.nom}</div>
+              <div style={{fontSize:'.8rem',color:a.type==='veterinaire'?'#42a5f5':'var(--lime)',fontWeight:600,marginBottom:'.3rem'}}>{a.specialite}</div>
+              <div style={{fontSize:'.78rem',color:'var(--ink3)',marginBottom:'.5rem'}}>📍 {a.ville} · {a.region}</div>
+              <div style={{fontSize:'.75rem',color:'var(--ink4)',marginBottom:'.75rem'}}>{a.avis} avis clients</div>
+              {sel?.id===a.id && (
+                <div style={{borderTop:'1px solid var(--border)',paddingTop:'.75rem',display:'flex',gap:'.5rem',flexWrap:'wrap'}}>
+                  <a href={'tel:'+a.telephone.replace(/\s/g,'')} className="btn btn-ghost btn-sm" style={{flex:1,justifyContent:'center',textDecoration:'none'}}>
+                    📞 Appeler
+                  </a>
+                  <a href={waveLink(a.telephone)} target="_blank" rel="noopener noreferrer"
+                    className="btn btn-lime btn-sm" style={{flex:1,justifyContent:'center',textDecoration:'none'}}>
+                    💬 WhatsApp
+                  </a>
+                </div>
+              )}
+            </div>
+          ))}
+          {filtered.length===0 && (
+            <div style={{gridColumn:'1/-1',textAlign:'center',padding:'2rem',color:'var(--ink3)'}}>
+              <div style={{fontSize:'2rem',marginBottom:'.5rem'}}>👨‍⚕️</div>
+              <div>Aucun expert trouvé pour ces critères</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   MESSAGERIE entre membres
+══════════════════════════════════════════════════════ */
+async function sbFetchConversations(userId) {
+  const {data} = await sb.from('messages')
+    .select('*, expediteur:users!messages_expediteur_id_fkey(id,nom,secteur), destinataire:users!messages_destinataire_id_fkey(id,nom,secteur)')
+    .or('expediteur_id.eq.'+userId+',destinataire_id.eq.'+userId)
+    .order('created_at',{ascending:false});
+  if (!data) return [];
+  const convMap = {};
+  data.forEach(m => {
+    const otherId = m.expediteur_id===userId ? m.destinataire_id : m.expediteur_id;
+    const other = m.expediteur_id===userId ? m.destinataire : m.expediteur;
+    if (!convMap[otherId]) convMap[otherId] = {userId:otherId,user:other,messages:[],unread:0};
+    convMap[otherId].messages.push(m);
+    if (m.destinataire_id===userId && !m.lu) convMap[otherId].unread++;
+  });
+  return Object.values(convMap);
+}
+
+async function sbFetchMessages(userId, otherId) {
+  const {data} = await sb.from('messages')
+    .select('*')
+    .or('and(expediteur_id.eq.'+userId+',destinataire_id.eq.'+otherId+'),and(expediteur_id.eq.'+otherId+',destinataire_id.eq.'+userId+')')
+    .order('created_at',{ascending:true});
+  return data || [];
+}
+
+async function sbEnvoyerMessage(expediteurId, destinataireId, texte) {
+  const {data,error} = await sb.from('messages').insert({
+    expediteur_id: expediteurId,
+    destinataire_id: destinataireId,
+    texte,
+    lu: false,
+  }).select().single();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+async function sbMarquerLu(userId, otherId) {
+  await sb.from('messages').update({lu:true})
+    .eq('destinataire_id',userId).eq('expediteur_id',otherId).eq('lu',false);
+}
+
+async function sbFetchUsers() {
+  const {data} = await sb.from('users').select('id,nom,secteur,region,village').order('nom');
+  return data || [];
+}
+
+function Messagerie({user, toast}) {
+  const [convs, setConvs] = React.useState([]);
+  const [selConv, setSelConv] = React.useState(null);
+  const [messages, setMessages] = React.useState([]);
+  const [texte, setTexte] = React.useState('');
+  const [users, setUsers] = React.useState([]);
+  const [showNewConv, setShowNewConv] = React.useState(false);
+  const [searchUser, setSearchUser] = React.useState('');
+  const [loading, setLoading] = React.useState(true);
+  const messagesEndRef = React.useRef(null);
+
+  React.useEffect(()=>{
+    load();
+    sbFetchUsers().then(u=>setUsers(u.filter(u=>u.id!==user.id)));
+    // Realtime nouveaux messages
+    const ch = sb.channel('rt_messages_'+user.id)
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',
+        filter:'destinataire_id=eq.'+user.id},
+        async ()=>{
+          await load();
+          if (selConv) await loadMessages(selConv.userId);
+          toast('💬 Nouveau message !','i');
+        })
+      .subscribe();
+    return ()=>sb.removeChannel(ch);
+  },[]);
+
+  React.useEffect(()=>{
+    if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({behavior:'smooth'});
+  },[messages]);
+
+  const load = async () => {
+    const c = await sbFetchConversations(user.id);
+    setConvs(c);
+    setLoading(false);
+  };
+
+  const loadMessages = async (otherId) => {
+    const m = await sbFetchMessages(user.id, otherId);
+    setMessages(m);
+    await sbMarquerLu(user.id, otherId);
+    await load();
+  };
+
+  const ouvrirConv = async (conv) => {
+    setSelConv(conv);
+    setShowNewConv(false);
+    await loadMessages(conv.userId);
+  };
+
+  const demarrerConv = async (otherUser) => {
+    const fakeConv = {userId:otherUser.id, user:otherUser, messages:[], unread:0};
+    setSelConv(fakeConv);
+    setShowNewConv(false);
+    setMessages([]);
+  };
+
+  const envoyer = async (e) => {
+    e.preventDefault();
+    if (!texte.trim()) return;
+    try {
+      const m = await sbEnvoyerMessage(user.id, selConv.userId, texte.trim());
+      setMessages(prev=>[...prev,m]);
+      setTexte('');
+      await load();
+    } catch(err) { toast('Erreur envoi: '+err.message,'e'); }
+  };
+
+  const usersFiltres = users.filter(u=>
+    u.nom.toLowerCase().includes(searchUser.toLowerCase()) ||
+    (u.village||'').toLowerCase().includes(searchUser.toLowerCase())
+  );
+
+  const totalUnread = convs.reduce((s,c)=>s+c.unread,0);
+  const secteurIc = (s) => s==='elevage'?'🐄':s==='mixte'?'🌾':'🌱';
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-tag">Messagerie</div>
+        <div className="ph-title">💬 Messages {totalUnread>0&&<span style={{fontSize:'.75rem',background:'var(--rust2)',color:'#fff',borderRadius:'99px',padding:'.1rem .5rem',marginLeft:'.4rem'}}>{totalUnread}</span>}</div>
+        <div className="ph-sub">Échangez directement avec les membres AgriTontine+</div>
+      </div>
+      <div className="content">
+        <div style={{display:'grid',gridTemplateColumns:'300px 1fr',gap:'1rem',height:'70vh',minHeight:'400px'}}>
+
+          {/* Liste conversations */}
+          <div style={{border:'1px solid var(--border)',borderRadius:'12px',overflow:'hidden',display:'flex',flexDirection:'column',background:'var(--card)'}}>
+            <div style={{padding:'.75rem',borderBottom:'1px solid var(--border)',display:'flex',gap:'.5rem'}}>
+              <button className={`btn btn-sm ${!showNewConv?'btn-lime':'btn-ghost'}`} style={{flex:1,justifyContent:'center'}} onClick={()=>setShowNewConv(false)}>
+                💬 Conversations
+              </button>
+              <button className={`btn btn-sm ${showNewConv?'btn-lime':'btn-ghost'}`} style={{flex:1,justifyContent:'center'}} onClick={()=>setShowNewConv(true)}>
+                + Nouveau
+              </button>
+            </div>
+            <div style={{overflowY:'auto',flex:1}}>
+              {showNewConv ? (
+                <div style={{padding:'.5rem'}}>
+                  <input placeholder="Rechercher un membre..." value={searchUser} onChange={e=>setSearchUser(e.target.value)}
+                    style={{width:'100%',padding:'.4rem .6rem',borderRadius:'6px',border:'1px solid var(--border)',background:'var(--card)',color:'var(--ink)',fontSize:'.82rem',marginBottom:'.5rem'}}/>
+                  {usersFiltres.slice(0,20).map(u=>(
+                    <div key={u.id} onClick={()=>demarrerConv(u)}
+                      style={{padding:'.6rem',borderRadius:'8px',cursor:'pointer',display:'flex',gap:'.6rem',alignItems:'center',marginBottom:'.2rem'}}
+                      onMouseOver={e=>e.currentTarget.style.background='var(--hover,rgba(0,0,0,.04))'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+                      <div style={{width:'32px',height:'32px',borderRadius:'50%',background:'var(--s3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1rem',flexShrink:0}}>{secteurIc(u.secteur)}</div>
+                      <div>
+                        <div style={{fontWeight:600,fontSize:'.85rem',color:'var(--ink)'}}>{u.nom}</div>
+                        <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>📍 {u.village||''} {u.region}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : loading ? (
+                <div style={{padding:'1rem',textAlign:'center',color:'var(--ink3)',fontSize:'.82rem'}}>⏳ Chargement...</div>
+              ) : convs.length===0 ? (
+                <div style={{padding:'1rem',textAlign:'center',color:'var(--ink3)',fontSize:'.82rem'}}>
+                  Aucune conversation<br/>
+                  <span style={{fontSize:'.75rem'}}>Cliquez sur + Nouveau</span>
+                </div>
+              ) : convs.map(c=>(
+                <div key={c.userId} onClick={()=>ouvrirConv(c)}
+                  style={{padding:'.75rem',cursor:'pointer',borderBottom:'1px solid var(--border)',
+                    background:selConv?.userId===c.userId?'rgba(90,158,32,.08)':'transparent',
+                    display:'flex',gap:'.6rem',alignItems:'center'}}>
+                  <div style={{width:'36px',height:'36px',borderRadius:'50%',background:'linear-gradient(135deg,var(--s3),var(--s4))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.1rem',flexShrink:0}}>
+                    {secteurIc(c.user?.secteur)}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontWeight:c.unread?700:500,fontSize:'.88rem',color:'var(--ink)',display:'flex',justifyContent:'space-between'}}>
+                      <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{c.user?.nom||'—'}</span>
+                      {c.unread>0&&<span style={{background:'var(--lime)',color:'#fff',borderRadius:'99px',fontSize:'.68rem',padding:'.1rem .4rem',flexShrink:0,marginLeft:'.3rem'}}>{c.unread}</span>}
+                    </div>
+                    <div style={{fontSize:'.72rem',color:'var(--ink3)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                      {c.messages[0]?.texte||'Démarrer la conversation'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Zone de chat */}
+          <div style={{border:'1px solid var(--border)',borderRadius:'12px',overflow:'hidden',display:'flex',flexDirection:'column',background:'var(--card)'}}>
+            {!selConv ? (
+              <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:'.75rem',color:'var(--ink3)'}}>
+                <div style={{fontSize:'3rem'}}>💬</div>
+                <div style={{fontWeight:600}}>Sélectionnez une conversation</div>
+                <div style={{fontSize:'.82rem'}}>ou cliquez sur + Nouveau pour écrire un membre</div>
+              </div>
+            ) : (<>
+              {/* Header */}
+              <div style={{padding:'.75rem 1rem',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',gap:'.75rem',background:'var(--card)'}}>
+                <div style={{width:'36px',height:'36px',borderRadius:'50%',background:'linear-gradient(135deg,var(--s3),var(--s4))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.1rem'}}>
+                  {secteurIc(selConv.user?.secteur)}
+                </div>
+                <div>
+                  <div style={{fontWeight:700,color:'var(--ink)'}}>{selConv.user?.nom||'—'}</div>
+                  <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>📍 {selConv.user?.village||''} {selConv.user?.region}</div>
+                </div>
+              </div>
+              {/* Messages */}
+              <div style={{flex:1,overflowY:'auto',padding:'1rem',display:'flex',flexDirection:'column',gap:'.5rem'}}>
+                {messages.length===0&&<div style={{textAlign:'center',color:'var(--ink3)',fontSize:'.82rem',marginTop:'2rem'}}>Envoyez votre premier message !</div>}
+                {messages.map(m=>{
+                  const isMine = m.expediteur_id===user.id;
+                  return (
+                    <div key={m.id} style={{display:'flex',justifyContent:isMine?'flex-end':'flex-start'}}>
+                      <div style={{maxWidth:'70%',padding:'.6rem .9rem',borderRadius:isMine?'16px 16px 4px 16px':'16px 16px 16px 4px',
+                        background:isMine?'var(--lime)':'var(--card2,#f0f0f0)',color:isMine?'#fff':'var(--ink)',fontSize:'.87rem',lineHeight:1.5}}>
+                        {m.texte}
+                        <div style={{fontSize:'.65rem',opacity:.7,marginTop:'.2rem',textAlign:'right'}}>
+                          {new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
+                          {isMine&&<span style={{marginLeft:'.3rem'}}>{m.lu?'✓✓':'✓'}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div ref={messagesEndRef}/>
+              </div>
+              {/* Input */}
+              <form onSubmit={envoyer} style={{padding:'.75rem',borderTop:'1px solid var(--border)',display:'flex',gap:'.5rem'}}>
+                <input value={texte} onChange={e=>setTexte(e.target.value)} placeholder="Écrire un message..."
+                  style={{flex:1,padding:'.6rem .9rem',borderRadius:'24px',border:'1px solid var(--border)',background:'var(--card)',color:'var(--ink)',fontSize:'.87rem'}}/>
+                <button type="submit" className="btn btn-lime" style={{borderRadius:'50%',width:'40px',height:'40px',padding:0,justifyContent:'center',flexShrink:0}}>
+                  ➤
+                </button>
+              </form>
+            </>)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   CARTE INTERACTIVE — Tontines par région
+══════════════════════════════════════════════════════ */
+function CarteRegions({user, tontines, toast}) {
+  const [selRegion, setSelRegion] = React.useState(null);
+  const [filterSec, setFilterSec] = React.useState('all');
+
+  // Coordonnées SVG approximatives des 15 régions du Sénégal
+  const COORDS = {
+    'Dakar':       {x:62,  y:158, pop:'3.7M'},
+    'Thiès':       {x:88,  y:148, pop:'2.1M'},
+    'Diourbel':    {x:128, y:148, pop:'1.8M'},
+    'Fatick':      {x:118, y:178, pop:'0.9M'},
+    'Kaolack':     {x:148, y:178, pop:'1.1M'},
+    'Kaffrine':    {x:188, y:168, pop:'0.7M'},
+    'Saint-Louis': {x:118, y:62,  pop:'1.1M'},
+    'Louga':       {x:138, y:98,  pop:'1.1M'},
+    'Matam':       {x:218, y:78,  pop:'0.7M'},
+    'Podor':       {x:168, y:62,  pop:'0.4M'},
+    'Tambacounda': {x:238, y:158, pop:'0.9M'},
+    'Kédougou':    {x:258, y:198, pop:'0.2M'},
+    'Kolda':       {x:208, y:208, pop:'0.7M'},
+    'Sédhiou':     {x:168, y:218, pop:'0.5M'},
+    'Ziguinchor':  {x:128, y:228, pop:'0.6M'},
+  };
+
+  const tontinesParRegion = React.useMemo(()=>{
+    const map = {};
+    REGIONS.forEach(r=>{ map[r]={total:0,agriculture:0,elevage:0,mixte:0,membres:0}; });
+    tontines.filter(t=>filterSec==='all'||t.secteur===filterSec).forEach(t=>{
+      if (map[t.region]) {
+        map[t.region].total++;
+        map[t.region][t.secteur]=(map[t.region][t.secteur]||0)+1;
+        map[t.region].membres+=(t.membres||[]).length;
+      }
+    });
+    return map;
+  },[tontines,filterSec]);
+
+  const maxTontines = Math.max(...Object.values(tontinesParRegion).map(r=>r.total),1);
+  const getColor = (region) => {
+    const n = tontinesParRegion[region]?.total||0;
+    if (n===0) return 'rgba(200,200,200,.3)';
+    const intensity = n/maxTontines;
+    if (intensity>0.7) return 'rgba(90,158,32,.8)';
+    if (intensity>0.4) return 'rgba(90,158,32,.5)';
+    return 'rgba(90,158,32,.25)';
+  };
+
+  const regSel = selRegion ? tontinesParRegion[selRegion] : null;
+  const tontinesSel = selRegion ? tontines.filter(t=>t.region===selRegion&&(filterSec==='all'||t.secteur===filterSec)) : [];
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-tag">Carte</div>
+        <div className="ph-title">🗺 Carte des Tontines — Sénégal</div>
+        <div className="ph-sub">Distribution des tontines par région · Cliquez sur une région</div>
+      </div>
+      <div className="content">
+        <div style={{marginBottom:'1rem',display:'flex',gap:'.5rem',flexWrap:'wrap',alignItems:'center'}}>
+          <select value={filterSec} onChange={e=>setFilterSec(e.target.value)}
+            style={{padding:'.5rem .75rem',borderRadius:'8px',border:'1px solid var(--border)',background:'var(--card)',color:'var(--ink)',fontSize:'.85rem'}}>
+            <option value="all">Tous secteurs</option>
+            {SECTEURS.map(s=><option key={s.id} value={s.id}>{s.ic} {s.label}</option>)}
+          </select>
+          <div style={{fontSize:'.8rem',color:'var(--ink3)'}}>
+            Total : <strong style={{color:'var(--lime)'}}>{tontines.filter(t=>filterSec==='all'||t.secteur===filterSec).length} tontines</strong> ·
+            <strong style={{color:'var(--gold2)'}}> {tontines.reduce((s,t)=>s+(t.membres||[]).length,0)} membres</strong>
+          </div>
+        </div>
+
+        <div className="g2">
+          {/* Carte SVG */}
+          <div className="card" style={{padding:'1rem'}}>
+            <div style={{fontWeight:600,marginBottom:'.75rem',fontSize:'.85rem',color:'var(--ink3)'}}>
+              🗺 Cliquez sur une région
+            </div>
+            <svg viewBox="0 0 320 260" style={{width:'100%',maxWidth:'400px',display:'block',margin:'0 auto'}}>
+              {Object.entries(COORDS).map(([region,pos])=>{
+                const data = tontinesParRegion[region];
+                const isUser = region===user.region;
+                const isSel = region===selRegion;
+                const r = data.total>0 ? Math.max(14, Math.min(26, 14+data.total*3)) : 12;
+                return (
+                  <g key={region} onClick={()=>setSelRegion(selRegion===region?null:region)} style={{cursor:'pointer'}}>
+                    <circle cx={pos.x} cy={pos.y} r={r}
+                      fill={getColor(region)}
+                      stroke={isSel?'var(--lime)':isUser?'var(--gold2)':'rgba(90,158,32,.4)'}
+                      strokeWidth={isSel?3:isUser?2:1}
+                      opacity={isSel?1:.85}/>
+                    {data.total>0&&(
+                      <text x={pos.x} y={pos.y+1} textAnchor="middle" dominantBaseline="middle"
+                        style={{fontSize:'9px',fontWeight:700,fill:'#fff',pointerEvents:'none'}}>
+                        {data.total}
+                      </text>
+                    )}
+                    <text x={pos.x} y={pos.y+r+9} textAnchor="middle"
+                      style={{fontSize:'7px',fill:'var(--ink3)',pointerEvents:'none'}}>
+                      {region.length>8?region.slice(0,8)+'…':region}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+            {/* Légende */}
+            <div style={{display:'flex',gap:'.75rem',justifyContent:'center',marginTop:'.75rem',flexWrap:'wrap'}}>
+              {[['rgba(90,158,32,.8)','Nombreuses'],['rgba(90,158,32,.5)','Quelques'],['rgba(90,158,32,.25)','1–2'],['rgba(200,200,200,.3)','Aucune']].map(([col,lbl])=>(
+                <div key={lbl} style={{display:'flex',alignItems:'center',gap:'.3rem',fontSize:'.72rem',color:'var(--ink3)'}}>
+                  <div style={{width:'12px',height:'12px',borderRadius:'50%',background:col}}/>
+                  {lbl}
+                </div>
+              ))}
+              <div style={{display:'flex',alignItems:'center',gap:'.3rem',fontSize:'.72rem',color:'var(--gold2)'}}>
+                <div style={{width:'12px',height:'12px',borderRadius:'50%',background:'transparent',border:'2px solid var(--gold2)'}}/>
+                Votre région
+              </div>
+            </div>
+          </div>
+
+          {/* Panneau détail région */}
+          <div>
+            {selRegion ? (
+              <div className="card">
+                <div style={{fontWeight:800,fontSize:'1.1rem',color:'var(--ink)',marginBottom:'.75rem'}}>
+                  📍 {selRegion}
+                  {selRegion===user.region&&<span className="chip ch-gold" style={{fontSize:'.7rem',marginLeft:'.5rem'}}>Votre région</span>}
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.6rem',marginBottom:'1rem'}}>
+                  {[
+                    ['Tontines',regSel.total,'var(--lime)'],
+                    ['Membres',regSel.membres,'var(--gold2)'],
+                    ['Agriculture',regSel.agriculture,'var(--lime)'],
+                    ['Élevage',regSel.elevage,'var(--amber2,#f59f00)'],
+                  ].map(([lbl,val,col])=>(
+                    <div key={lbl} style={{padding:'.6rem',background:'var(--card2,#f5f5f5)',borderRadius:'8px',textAlign:'center'}}>
+                      <div style={{fontWeight:800,fontSize:'1.2rem',color:col}}>{val}</div>
+                      <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>{lbl}</div>
+                    </div>
+                  ))}
+                </div>
+                {tontinesSel.length>0 ? tontinesSel.map(t=>(
+                  <div key={t.id} style={{padding:'.6rem .75rem',borderRadius:'8px',border:'1px solid var(--border)',marginBottom:'.5rem',background:'var(--card)'}}>
+                    <div style={{fontWeight:600,fontSize:'.88rem',color:'var(--ink)'}}>{t.nom}</div>
+                    <div style={{fontSize:'.75rem',color:'var(--ink3)',marginTop:'.2rem',display:'flex',gap:'1rem'}}>
+                      <span>👥 {(t.membres||[]).length}/{t.nbMax}</span>
+                      <span>💰 {(t.montantCotis||0).toLocaleString('fr-FR')} FCFA</span>
+                      <span className={`chip ${SECTEURS.find(s=>s.id===t.secteur)?.cls||'ch-gray'}`} style={{fontSize:'.65rem'}}>{t.secteur}</span>
+                    </div>
+                  </div>
+                )) : (
+                  <div style={{textAlign:'center',padding:'1rem',color:'var(--ink3)',fontSize:'.83rem'}}>
+                    Aucune tontine dans cette région<br/>
+                    <span style={{fontSize:'.75rem'}}>Soyez le premier à en créer une !</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="card" style={{textAlign:'center',padding:'2rem',color:'var(--ink3)'}}>
+                <div style={{fontSize:'2.5rem',marginBottom:'.75rem'}}>🗺</div>
+                <div style={{fontWeight:600,marginBottom:'.4rem'}}>Explorez les régions</div>
+                <div style={{fontSize:'.82rem'}}>Cliquez sur un cercle pour voir les tontines de la région</div>
+                <div style={{marginTop:'1rem',padding:'.6rem',background:'rgba(90,158,32,.08)',borderRadius:'8px',fontSize:'.8rem',color:'var(--lime)'}}>
+                  Votre région : <strong>{user.region}</strong>
+                </div>
+              </div>
+            )}
+
+            {/* Top régions */}
+            <div className="card mt2">
+              <div className="card-title">🏆 Top régions</div>
+              {Object.entries(tontinesParRegion)
+                .filter(([,d])=>d.total>0)
+                .sort(([,a],[,b])=>b.total-a.total)
+                .slice(0,5)
+                .map(([region,data],i)=>(
+                  <div key={region} onClick={()=>setSelRegion(region)}
+                    style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'.5rem 0',
+                      borderBottom:'1px solid var(--border)',cursor:'pointer',
+                      color:selRegion===region?'var(--lime)':'var(--ink)'}}>
+                    <div style={{display:'flex',gap:'.5rem',alignItems:'center'}}>
+                      <span style={{fontWeight:700,color:'var(--ink3)',fontSize:'.8rem'}}>#{i+1}</span>
+                      <span style={{fontWeight:600,fontSize:'.88rem'}}>{region}</span>
+                    </div>
+                    <div style={{display:'flex',gap:'.75rem',fontSize:'.78rem',color:'var(--ink3)'}}>
+                      <span>{data.total} tontines</span>
+                      <span style={{color:'var(--lime)',fontWeight:600}}>{data.membres} membres</span>
+                    </div>
+                  </div>
+                ))}
+              {Object.values(tontinesParRegion).every(d=>d.total===0)&&(
+                <div style={{textAlign:'center',color:'var(--ink3)',fontSize:'.82rem',padding:'1rem'}}>
+                  Créez des tontines pour les voir apparaître sur la carte
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   ADMIN NATIONAL — Tableau de bord
+══════════════════════════════════════════════════════ */
+function AdminNational({user, tontines, projets, toast}) {
+  const [stats, setStats] = React.useState(null);
+  const [topUsers, setTopUsers] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(()=>{
+    load();
+  },[]);
+
+  const load = async () => {
+    setLoading(true);
+    const [usersRes, cotisRes, creditRes, investRes, annoncesRes] = await Promise.all([
+      sb.from('users').select('id,nom,secteur,region,role,created_at'),
+      sb.from('cotisations').select('id,montant,statut,user_id'),
+      sb.from('credits').select('id,montant,statut'),
+      sb.from('investissements').select('id,montant'),
+      sb.from('annonces').select('id,statut,type'),
+    ]);
+    const users = usersRes.data||[];
+    const cotis = cotisRes.data||[];
+    const credits = creditRes.data||[];
+    const invests = investRes.data||[];
+    const annonces = annoncesRes.data||[];
+
+    const totalCotis = cotis.filter(c=>c.statut==='payee').reduce((s,c)=>s+c.montant,0);
+    const totalCredits = credits.reduce((s,c)=>s+c.montant,0);
+    const totalInvests = invests.reduce((s,i)=>s+i.montant,0);
+    const retards = cotis.filter(c=>c.statut==='retard').length;
+
+    setStats({
+      nbUsers: users.length,
+      nbTontines: tontines.length,
+      nbProjets: projets.length,
+      totalCotis,
+      totalCredits,
+      totalInvests,
+      retards,
+      nbAnnonces: annonces.filter(a=>a.statut==='active').length,
+      parRegion: REGIONS.map(r=>({region:r,users:users.filter(u=>u.region===r).length,tontines:tontines.filter(t=>t.region===r).length})).filter(r=>r.users>0||r.tontines>0).sort((a,b)=>b.users-a.users),
+      parSecteur: SECTEURS.map(s=>({secteur:s.label,ic:s.ic,users:users.filter(u=>u.secteur===s.id).length})),
+      evolution: Array.from({length:6},(_,i)=>{
+        const d = new Date(); d.setMonth(d.getMonth()-5+i);
+        const mois = d.toLocaleString('fr-FR',{month:'short'});
+        const usersM = users.filter(u=>new Date(u.created_at).getMonth()===d.getMonth()&&new Date(u.created_at).getFullYear()===d.getFullYear()).length;
+        return {mois,users:usersM};
+      }),
+    });
+
+    // Top users par cotisations
+    const userCotis = {};
+    cotis.filter(c=>c.statut==='payee').forEach(c=>{ userCotis[c.user_id]=(userCotis[c.user_id]||0)+c.montant; });
+    const top = users.sort((a,b)=>(userCotis[b.id]||0)-(userCotis[a.id]||0)).slice(0,5).map(u=>({...u,totalCotis:userCotis[u.id]||0}));
+    setTopUsers(top);
+    setLoading(false);
+  };
+
+  const prix = (n) => n?Math.round(n).toLocaleString('fr-FR')+' FCFA':'0 FCFA';
+
+  if (!user || user.role!=='admin') return (
+    <div className="content">
+      <div className="card" style={{textAlign:'center',padding:'2rem',color:'var(--ink3)'}}>
+        <div style={{fontSize:'2rem',marginBottom:'.5rem'}}>🔒</div>
+        <div style={{fontWeight:600}}>Accès réservé aux administrateurs</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-tag">Administration</div>
+        <div className="ph-title">👑 Tableau de bord national</div>
+        <div className="ph-sub">Vue globale AgriTontine+ · Sénégal · {new Date().toLocaleDateString('fr-FR')}</div>
+      </div>
+      <div className="content">
+        {loading ? <div style={{textAlign:'center',padding:'2rem',color:'var(--ink3)'}}>⏳ Chargement des données...</div> : stats && (<>
+          {/* KPIs principaux */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:'.75rem',marginBottom:'1.5rem'}}>
+            {[
+              ['👥',stats.nbUsers,'Membres',null],
+              ['🤝',stats.nbTontines,'Tontines',null],
+              ['💰',prix(stats.totalCotis),'Cotisations','var(--lime)'],
+              ['🌱',credits_text(stats.totalCredits),'Crédits octroyés','var(--teal2)'],
+              ['💼',prix(stats.totalInvests),'Investissements','var(--gold2)'],
+              ['🛒',stats.nbAnnonces,'Annonces actives',null],
+              ['⚠',stats.retards,'Retards paiement','var(--rust2)'],
+            ].map(([ic,val,lbl,col])=>(
+              <div key={lbl} className="card" style={{textAlign:'center',padding:'.75rem'}}>
+                <div style={{fontSize:'1.4rem'}}>{ic}</div>
+                <div style={{fontWeight:800,fontSize:'1.1rem',color:col||'var(--ink)',margin:'.2rem 0',lineHeight:1.2}}>{val}</div>
+                <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>{lbl}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="g2">
+            {/* Par région */}
+            <div className="card">
+              <div className="card-title">📍 Activité par région</div>
+              {stats.parRegion.slice(0,8).map((r,i)=>(
+                <div key={r.region} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'.45rem 0',borderBottom:'1px solid var(--border)'}}>
+                  <div style={{display:'flex',gap:'.5rem',alignItems:'center'}}>
+                    <span style={{fontSize:'.78rem',color:'var(--ink4)',width:'1.2rem'}}>#{i+1}</span>
+                    <span style={{fontWeight:600,fontSize:'.88rem'}}>{r.region}</span>
+                  </div>
+                  <div style={{display:'flex',gap:'1rem',fontSize:'.78rem',color:'var(--ink3)'}}>
+                    <span>👥 {r.users}</span>
+                    <span style={{color:'var(--lime)',fontWeight:600}}>🤝 {r.tontines}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Par secteur */}
+            <div>
+              <div className="card mb2">
+                <div className="card-title">🌾 Répartition par secteur</div>
+                {stats.parSecteur.map(s=>{
+                  const pct = stats.nbUsers>0?Math.round(s.users/stats.nbUsers*100):0;
+                  return (
+                    <div key={s.secteur} style={{marginBottom:'.75rem'}}>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:'.83rem',marginBottom:'.25rem'}}>
+                        <span>{s.ic} {s.secteur}</span>
+                        <span style={{fontWeight:600,color:'var(--lime)'}}>{s.users} ({pct}%)</span>
+                      </div>
+                      <div style={{height:'6px',background:'var(--border)',borderRadius:'99px',overflow:'hidden'}}>
+                        <div style={{width:pct+'%',height:'100%',background:'var(--lime)',borderRadius:'99px',transition:'.4s'}}/>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Top membres */}
+              <div className="card">
+                <div className="card-title">🏆 Top 5 membres actifs</div>
+                {topUsers.map((u,i)=>(
+                  <div key={u.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'.45rem 0',borderBottom:'1px solid var(--border)'}}>
+                    <div style={{display:'flex',gap:'.5rem',alignItems:'center'}}>
+                      <span style={{fontSize:'.78rem',color:'var(--ink4)',width:'1.2rem'}}>#{i+1}</span>
+                      <div>
+                        <div style={{fontWeight:600,fontSize:'.85rem'}}>{u.nom}</div>
+                        <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>{u.region}</div>
+                      </div>
+                    </div>
+                    <span style={{fontWeight:700,color:'var(--lime)',fontSize:'.82rem'}}>{prix(u.totalCotis)}</span>
+                  </div>
+                ))}
+                {topUsers.length===0&&<div style={{textAlign:'center',color:'var(--ink3)',fontSize:'.82rem',padding:'.5rem'}}>Aucune cotisation enregistrée</div>}
+              </div>
+            </div>
+          </div>
+        </>)}
+      </div>
+    </div>
+  );
+}
+
+function credits_text(n) {
+  if (!n) return '0 FCFA';
+  if (n>=1000000) return (n/1000000).toFixed(1)+'M FCFA';
+  if (n>=1000) return (n/1000).toFixed(0)+'K FCFA';
+  return n.toLocaleString('fr-FR')+' FCFA';
+}
+
 function Login({onLogin}){
   const [tab,setTab]=useState('paysan');
   const [f,setF]=useState({nom:'',tel:'',village:'',region:'Dakar',secteur:'agriculture',role:'paysan'});
@@ -3037,6 +3757,10 @@ function App(){
     ...(isAdm?[{id:'admin',ic:'👑',label:'Administration'}]:[]),
     {id:'marche',ic:'🛒',label:'Marché Cadran'},
     {id:'outils',ic:'🌾',label:'Outils Agricoles'},
+    {id:'annuaire',ic:'👨‍⚕️',label:'Annuaire Experts'},
+    {id:'messagerie',ic:'💬',label:'Messagerie'},
+    {id:'carte',ic:'🗺',label:'Carte Tontines'},
+    {id:'adminnational',ic:'📊',label:'Admin National'},
     {id:'profil',ic:'👤',label:'Mon profil'},
   ];
 
@@ -3049,6 +3773,10 @@ function App(){
     admin:<Admin user={user} tontines={tontines} setTontines={setTontinesWrapper} toast={toast}/>,
     marche:<Marche user={user} toast={toast}/>,
     outils:<OutilsAgricoles user={user} toast={toast}/>,
+    annuaire:<Annuaire user={user} toast={toast}/>,
+    messagerie:<Messagerie user={user} toast={toast}/>,
+    carte:<CarteRegions user={user} tontines={tontines} toast={toast}/>,
+    adminnational:<AdminNational user={user} tontines={tontines} projets={projets} toast={toast}/>,
     profil:<Profil user={user} setUser={setUserWrapper} toast={toast}/>,
   };
 
