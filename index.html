@@ -2310,32 +2310,32 @@ function Marche({user, toast}) {
 /* ── Données : Calendrier cultural Sénégal ── */
 const CALENDRIER = {
   agriculture: [
-    {culture:'Arachide',    semis:'Juin–Juillet',     recolte:'Octobre–Novembre', regions:['Diourbel','Kaolack','Kaffrine','Fatick','Thiès'],         conseil:'Semis dès les premières pluies (50mm). Variété 55-437 ou Fleur 11.'},
-    {culture:'Mil',         semis:'Juillet',           recolte:'Octobre–Novembre', regions:['Saint-Louis','Louga','Matam','Diourbel','Kaffrine'],       conseil:'Démarier à 1 plant/poquet à 10 jours. Sarclage à J+20 et J+40.'},
-    {culture:'Maïs',        semis:'Juillet–Août',      recolte:'Octobre–Novembre', regions:['Kolda','Sédhiou','Ziguinchor','Tambacounda'],              conseil:'Apport NPK au semis + urée à la floraison. Irrigation possible.'},
-    {culture:'Riz',         semis:'Juillet–Août',      recolte:'Novembre–Décembre',regions:['Saint-Louis','Ziguinchor','Kolda','Sédhiou'],              conseil:'Repiquage à 21 jours. Lame d'eau 5cm. Variété ISRA Sahel 108.'},
-    {culture:'Niébé',       semis:'Juillet–Août',      recolte:'Octobre',          regions:['Thiès','Diourbel','Fatick','Kaolack'],                     conseil:'Résistant à la sécheresse. Association mil-niébé recommandée.'},
-    {culture:'Sorgho',      semis:'Juillet–Août',      recolte:'Novembre',         regions:['Tambacounda','Kédougou','Kolda','Matam'],                  conseil:'Tolérant au déficit hydrique. Variété locale CE180.'},
-    {culture:'Tomate',      semis:'Novembre–Décembre', recolte:'Février–Mars',     regions:['Saint-Louis','Thiès','Dakar'],                             conseil:'Saison froide optimale. Irrigation goutte-à-goutte. Variété Roma VF.'},
-    {culture:'Oignon',      semis:'Octobre–Novembre',  recolte:'Janvier–Mars',     regions:['Saint-Louis','Thiès','Louga'],                             conseil:'Pépinière 6 semaines avant repiquage. Fumure organique essentielle.'},
-    {culture:'Arachide de contre-saison', semis:'Février–Mars', recolte:'Juin',    regions:['Dakar','Thiès','Fatick'],                                  conseil:'Nécessite irrigation. Variété Fleur 11. Rentable si irrigation disponible.'},
+    {culture:'Arachide',    semis:'Juin–Juillet',     recolte:'Octobre–Novembre', regions:['Diourbel','Kaolack','Kaffrine','Fatick','Thiès'],         conseil:`Semis dès les premières pluies (50mm). Variété 55-437 ou Fleur 11.`},
+    {culture:'Mil',         semis:'Juillet',           recolte:'Octobre–Novembre', regions:['Saint-Louis','Louga','Matam','Diourbel','Kaffrine'],       conseil:`Démarier à 1 plant/poquet à 10 jours. Sarclage à J+20 et J+40.`},
+    {culture:'Maïs',        semis:'Juillet–Août',      recolte:'Octobre–Novembre', regions:['Kolda','Sédhiou','Ziguinchor','Tambacounda'],              conseil:`Apport NPK au semis + urée à la floraison. Irrigation possible.`},
+    {culture:'Riz',         semis:'Juillet–Août',      recolte:'Novembre–Décembre',regions:['Saint-Louis','Ziguinchor','Kolda','Sédhiou'],              conseil:`Repiquage à 21 jours. Lame deau 5cm. Variété ISRA Sahel 108.`},
+    {culture:'Niébé',       semis:'Juillet–Août',      recolte:'Octobre',          regions:['Thiès','Diourbel','Fatick','Kaolack'],                     conseil:`Résistant à la sécheresse. Association mil-niébé recommandée.`},
+    {culture:'Sorgho',      semis:'Juillet–Août',      recolte:'Novembre',         regions:['Tambacounda','Kédougou','Kolda','Matam'],                  conseil:`Tolérant au déficit hydrique. Variété locale CE180.`},
+    {culture:'Tomate',      semis:'Novembre–Décembre', recolte:'Février–Mars',     regions:['Saint-Louis','Thiès','Dakar'],                             conseil:`Saison froide optimale. Irrigation goutte-à-goutte. Variété Roma VF.`},
+    {culture:'Oignon',      semis:'Octobre–Novembre',  recolte:'Janvier–Mars',     regions:['Saint-Louis','Thiès','Louga'],                             conseil:`Pépinière 6 semaines avant repiquage. Fumure organique essentielle.`},
+    {culture:'Arachide de contre-saison', semis:'Février–Mars', recolte:'Juin',    regions:['Dakar','Thiès','Fatick'],                                  conseil:`Nécessite irrigation. Variété Fleur 11. Rentable si irrigation disponible.`},
   ],
   elevage: [
-    {culture:'Bovins (vêlage)',    semis:'Saison sèche (Nov–Fév)',  recolte:'Toute l'année', regions:['Louga','Saint-Louis','Tambacounda','Matam'], conseil:'Suivi vétérinaire mensuel. Vaccination FVR en octobre.'},
-    {culture:'Ovins (agnelage)',   semis:'Toute l'année',           recolte:'Avant Tabaski', regions:['Toutes régions'],                            conseil:'Engraissement 3 mois avant Tabaski. Aliment composé + paille.'},
-    {culture:'Volaille (poulet)',  semis:'Toute l'année',           recolte:'J+45 (chair)',  regions:['Toutes régions'],                            conseil:'Biosécurité stricte. Vaccination Newcastle à J8 et J21.'},
-    {culture:'Caprins (chevreau)', semis:'Octobre–Novembre',         recolte:'Toute l'année',regions:['Kaolack','Diourbel','Fatick'],               conseil:'Résistants à la chaleur. Vermifugation bi-annuelle.'},
+    {culture:'Bovins (vêlage)',    semis:`Saison sèche (Nov-Fév)`,  recolte:`Toute l'année`, regions:['Louga','Saint-Louis','Tambacounda','Matam'], conseil:`Suivi vétérinaire mensuel. Vaccination FVR en octobre.`},
+    {culture:'Ovins (agnelage)',   semis:`Toute l'année`,           recolte:`Avant Tabaski`, regions:['Toutes régions'],                            conseil:`Engraissement 3 mois avant Tabaski. Aliment composé + paille.`},
+    {culture:'Volaille (poulet)',  semis:`Toute l'année`,           recolte:`J+45 (chair)`,  regions:['Toutes régions'],                            conseil:`Biosécurité stricte. Vaccination Newcastle à J8 et J21.`},
+    {culture:'Caprins (chevreau)', semis:'Octobre–Novembre',         recolte:`Toute l'année`,regions:['Kaolack','Diourbel','Fatick'],               conseil:`Résistants à la chaleur. Vermifugation bi-annuelle.`},
   ],
 };
 
 /* ── Données : Ravageurs et alertes ── */
 const ALERTES_RAVAGEURS = [
-  {nom:'Criquet pèlerin',    ic:'🦗', niveau:'élevé',  mois:['Août','Septembre','Octobre'], cultures:['Mil','Sorgho','Maïs','Riz'],   action:'Signaler immédiatement à la DAGPN (+221 33 849 70 00). Ne pas traiter seul.'},
-  {nom:'Chenille légionnaire', ic:'🐛', niveau:'élevé', mois:['Juillet','Août','Septembre'],cultures:['Maïs','Mil','Sorgho'],         action:'Traitement Coragen ou Ampligo. Surveillance nocturne recommandée.'},
-  {nom:'Pucerons arachide',  ic:'🪲', niveau:'moyen',  mois:['Août','Septembre'],            cultures:['Arachide'],                   action:'Pulvérisation Imidaclopride 200g/ha. Éviter les heures chaudes.'},
-  {nom:'Mildiou oignon',     ic:'🍄', niveau:'moyen',  mois:['Décembre','Janvier','Février'],cultures:['Oignon','Tomate'],            action:'Fongicide Mancozèbe. Éviter excès d'humidité. Rotation culturale.'},
-  {nom:'FMDV (Fièvre aphteuse)', ic:'🐄', niveau:'élevé', mois:['Novembre','Décembre'],     cultures:['Bovins','Ovins'],              action:'Vaccination annuelle obligatoire. Quarantaine 21 jours. Signaler à DIREL.'},
-  {nom:'Newcastle volaille', ic:'🐓', niveau:'élevé',  mois:['Toute l'année'],              cultures:['Volaille'],                   action:'Vaccination à J8, rappel J21. Biosécurité stricte. Mortalité 80% sans vaccin.'},
+  {nom:'Criquet pèlerin',    ic:'🦗', niveau:'élevé',  mois:['Août','Septembre','Octobre'], cultures:['Mil','Sorgho','Maïs','Riz'],   action:`Signaler immédiatement à la DAGPN (+221 33 849 70 00). Ne pas traiter seul.`},
+  {nom:'Chenille légionnaire', ic:'🐛', niveau:'élevé', mois:['Juillet','Août','Septembre'],cultures:['Maïs','Mil','Sorgho'],         action:`Traitement Coragen ou Ampligo. Surveillance nocturne recommandée.`},
+  {nom:'Pucerons arachide',  ic:'🪲', niveau:'moyen',  mois:['Août','Septembre'],            cultures:['Arachide'],                   action:`Pulvérisation Imidaclopride 200g/ha. Éviter les heures chaudes.`},
+  {nom:'Mildiou oignon',     ic:'🍄', niveau:'moyen',  mois:['Décembre','Janvier','Février'],cultures:['Oignon','Tomate'],            action:`Fongicide Mancozèbe. Éviter excès d`humidité. Rotation culturale.'},
+  {nom:'FMDV (Fièvre aphteuse)', ic:'🐄', niveau:'élevé', mois:['Novembre','Décembre'],     cultures:['Bovins','Ovins'],              action:`Vaccination annuelle obligatoire. Quarantaine 21 jours. Signaler à DIREL.`},
+  {nom:'Newcastle volaille', ic:'🐓', niveau:'élevé',  mois:['Toute l'année'],              cultures:['Volaille'],                   action:`Vaccination à J8, rappel J21. Biosécurité stricte. Mortalité 80% sans vaccin.`},
 ];
 
 /* ── Données : Rendements de référence Sénégal ── */
@@ -2355,21 +2355,21 @@ const RENDEMENTS_REF = {
 
 /* ── Météo : données statiques par région (à remplacer par API OpenWeather) ── */
 const METEO_REGIONS = {
-  'Dakar':       {temp:27, hum:75, pluie:'Jan–Mar : saison sèche', vent:'Harmattan modéré',  conseil:'Irrigation indispensable nov–mai'},
-  'Thiès':       {temp:28, hum:68, pluie:'Juil–Oct : 400–600mm',   vent:'Alize côtier',      conseil:'Idéal maraîchage oct–fév'},
-  'Diourbel':    {temp:30, hum:55, pluie:'Juil–Sep : 500–700mm',   vent:'Harmattan fort',    conseil:'Zone arachidière par excellence'},
-  'Saint-Louis': {temp:26, hum:65, pluie:'Août–Sep : 200–400mm',   vent:'Alize marin',       conseil:'Riz irrigué toute l'année possible'},
-  'Louga':       {temp:31, hum:45, pluie:'Août–Sep : 300–500mm',   vent:'Harmattan fort',    conseil:'Élevage extensif bovin-ovin'},
-  'Fatick':      {temp:29, hum:70, pluie:'Juil–Oct : 600–900mm',   vent:'Modéré',            conseil:'Niébé + arachide + maraîchage'},
-  'Kaolack':     {temp:31, hum:60, pluie:'Juil–Oct : 600–900mm',   vent:'Modéré',            conseil:'Capital arachidier du Sénégal'},
-  'Ziguinchor':  {temp:28, hum:85, pluie:'Jun–Oct : 1200–1600mm',  vent:'Faible',            conseil:'Riziculture + fruits tropicaux'},
-  'Tambacounda': {temp:33, hum:50, pluie:'Juil–Oct : 700–1000mm',  vent:'Harmattan',         conseil:'Maïs + sorgho + élevage bovin'},
-  'Kédougou':    {temp:30, hum:75, pluie:'Mai–Nov : 1200–1600mm',  vent:'Faible',            conseil:'Zone la plus arrosée du Sénégal'},
-  'Kolda':       {temp:29, hum:80, pluie:'Jun–Oct : 1000–1400mm',  vent:'Faible',            conseil:'Maïs + riz + élevage'},
-  'Sédhiou':     {temp:28, hum:82, pluie:'Jun–Oct : 1100–1500mm',  vent:'Faible',            conseil:'Riziculture + mangues'},
-  'Kaffrine':    {temp:32, hum:52, pluie:'Juil–Sep : 600–800mm',   vent:'Harmattan',         conseil:'Arachide + mil + sorgho'},
-  'Matam':       {temp:34, hum:40, pluie:'Août–Sep : 300–500mm',   vent:'Harmattan fort',    conseil:'Élevage + cultures irriguées bord fleuve'},
-  'Podor':       {temp:35, hum:35, pluie:'Août–Sep : 200–350mm',   vent:'Harmattan très fort',conseil:'Cultures de décrues + élevage camelin'},
+  'Dakar':       {temp:27, hum:75, pluie:'Jan–Mar : saison sèche', vent:'Harmattan modéré',  conseil:`Irrigation indispensable nov–mai`},
+  'Thiès':       {temp:28, hum:68, pluie:'Juil–Oct : 400–600mm',   vent:'Alize côtier',      conseil:`Idéal maraîchage oct–fév`},
+  'Diourbel':    {temp:30, hum:55, pluie:'Juil–Sep : 500–700mm',   vent:'Harmattan fort',    conseil:`Zone arachidière par excellence`},
+  'Saint-Louis': {temp:26, hum:65, pluie:'Août–Sep : 200–400mm',   vent:'Alize marin',       conseil:`Riz irrigué toute l`année possible'},
+  'Louga':       {temp:31, hum:45, pluie:'Août–Sep : 300–500mm',   vent:'Harmattan fort',    conseil:`Élevage extensif bovin-ovin`},
+  'Fatick':      {temp:29, hum:70, pluie:'Juil–Oct : 600–900mm',   vent:'Modéré',            conseil:`Niébé + arachide + maraîchage`},
+  'Kaolack':     {temp:31, hum:60, pluie:'Juil–Oct : 600–900mm',   vent:'Modéré',            conseil:`Capital arachidier du Sénégal`},
+  'Ziguinchor':  {temp:28, hum:85, pluie:'Jun–Oct : 1200–1600mm',  vent:'Faible',            conseil:`Riziculture + fruits tropicaux`},
+  'Tambacounda': {temp:33, hum:50, pluie:'Juil–Oct : 700–1000mm',  vent:'Harmattan',         conseil:`Maïs + sorgho + élevage bovin`},
+  'Kédougou':    {temp:30, hum:75, pluie:'Mai–Nov : 1200–1600mm',  vent:'Faible',            conseil:`Zone la plus arrosée du Sénégal`},
+  'Kolda':       {temp:29, hum:80, pluie:'Jun–Oct : 1000–1400mm',  vent:'Faible',            conseil:`Maïs + riz + élevage`},
+  'Sédhiou':     {temp:28, hum:82, pluie:'Jun–Oct : 1100–1500mm',  vent:'Faible',            conseil:`Riziculture + mangues`},
+  'Kaffrine':    {temp:32, hum:52, pluie:'Juil–Sep : 600–800mm',   vent:'Harmattan',         conseil:`Arachide + mil + sorgho`},
+  'Matam':       {temp:34, hum:40, pluie:'Août–Sep : 300–500mm',   vent:'Harmattan fort',    conseil:`Élevage + cultures irriguées bord fleuve`},
+  'Podor':       {temp:35, hum:35, pluie:'Août–Sep : 200–350mm',   vent:'Harmattan très fort',conseil:`Cultures de décrues + élevage camelin`},
 };
 
 /* ══════════════════════════════════════════════════════
