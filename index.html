@@ -286,6 +286,7 @@ hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
 <!-- Supabase CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
+<!-- v3.1 20260226155040 -->
 <script type="text/babel">
 const {useState,useEffect,useCallback,useMemo,useRef} = React;
 
@@ -2333,7 +2334,7 @@ const ALERTES_RAVAGEURS = [
   {nom:'Criquet pèlerin',    ic:'🦗', niveau:'élevé',  mois:['Août','Septembre','Octobre'], cultures:['Mil','Sorgho','Maïs','Riz'],   action:`Signaler immédiatement à la DAGPN (+221 33 849 70 00). Ne pas traiter seul.`},
   {nom:'Chenille légionnaire', ic:'🐛', niveau:'élevé', mois:['Juillet','Août','Septembre'],cultures:['Maïs','Mil','Sorgho'],         action:`Traitement Coragen ou Ampligo. Surveillance nocturne recommandée.`},
   {nom:'Pucerons arachide',  ic:'🪲', niveau:'moyen',  mois:['Août','Septembre'],            cultures:['Arachide'],                   action:`Pulvérisation Imidaclopride 200g/ha. Éviter les heures chaudes.`},
-  {nom:'Mildiou oignon',     ic:'🍄', niveau:'moyen',  mois:['Décembre','Janvier','Février'],cultures:['Oignon','Tomate'],            action:`Fongicide Mancozèbe. Éviter excès d’humidité. Rotation culturale.'},
+  {nom:'Mildiou oignon',     ic:'🍄', niveau:'moyen',  mois:['Décembre','Janvier','Février'],cultures:['Oignon','Tomate'],            action:`Fongicide Mancozèbe. Éviter exces d’humidite. Rotation culturale.`},
   {nom:'FMDV (Fièvre aphteuse)', ic:'🐄', niveau:'élevé', mois:['Novembre','Décembre'],     cultures:['Bovins','Ovins'],              action:`Vaccination annuelle obligatoire. Quarantaine 21 jours. Signaler à DIREL.`},
   {nom:'Newcastle volaille', ic:'🐓', niveau:'élevé',  mois:[`Toute l’année`],              cultures:['Volaille'],                   action:`Vaccination à J8, rappel J21. Biosécurité stricte. Mortalité 80% sans vaccin.`},
 ];
