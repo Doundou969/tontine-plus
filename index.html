@@ -2302,6 +2302,436 @@ function Marche({user, toast}) {
   );
 }
 
+
+/* ══════════════════════════════════════════════════════
+   OUTILS AGRICOLES — Calculateur + Météo + Calendrier
+══════════════════════════════════════════════════════ */
+
+/* ── Données : Calendrier cultural Sénégal ── */
+const CALENDRIER = {
+  agriculture: [
+    {culture:'Arachide',    semis:'Juin–Juillet',     recolte:'Octobre–Novembre', regions:['Diourbel','Kaolack','Kaffrine','Fatick','Thiès'],         conseil:'Semis dès les premières pluies (50mm). Variété 55-437 ou Fleur 11.'},
+    {culture:'Mil',         semis:'Juillet',           recolte:'Octobre–Novembre', regions:['Saint-Louis','Louga','Matam','Diourbel','Kaffrine'],       conseil:'Démarier à 1 plant/poquet à 10 jours. Sarclage à J+20 et J+40.'},
+    {culture:'Maïs',        semis:'Juillet–Août',      recolte:'Octobre–Novembre', regions:['Kolda','Sédhiou','Ziguinchor','Tambacounda'],              conseil:'Apport NPK au semis + urée à la floraison. Irrigation possible.'},
+    {culture:'Riz',         semis:'Juillet–Août',      recolte:'Novembre–Décembre',regions:['Saint-Louis','Ziguinchor','Kolda','Sédhiou'],              conseil:'Repiquage à 21 jours. Lame d'eau 5cm. Variété ISRA Sahel 108.'},
+    {culture:'Niébé',       semis:'Juillet–Août',      recolte:'Octobre',          regions:['Thiès','Diourbel','Fatick','Kaolack'],                     conseil:'Résistant à la sécheresse. Association mil-niébé recommandée.'},
+    {culture:'Sorgho',      semis:'Juillet–Août',      recolte:'Novembre',         regions:['Tambacounda','Kédougou','Kolda','Matam'],                  conseil:'Tolérant au déficit hydrique. Variété locale CE180.'},
+    {culture:'Tomate',      semis:'Novembre–Décembre', recolte:'Février–Mars',     regions:['Saint-Louis','Thiès','Dakar'],                             conseil:'Saison froide optimale. Irrigation goutte-à-goutte. Variété Roma VF.'},
+    {culture:'Oignon',      semis:'Octobre–Novembre',  recolte:'Janvier–Mars',     regions:['Saint-Louis','Thiès','Louga'],                             conseil:'Pépinière 6 semaines avant repiquage. Fumure organique essentielle.'},
+    {culture:'Arachide de contre-saison', semis:'Février–Mars', recolte:'Juin',    regions:['Dakar','Thiès','Fatick'],                                  conseil:'Nécessite irrigation. Variété Fleur 11. Rentable si irrigation disponible.'},
+  ],
+  elevage: [
+    {culture:'Bovins (vêlage)',    semis:'Saison sèche (Nov–Fév)',  recolte:'Toute l'année', regions:['Louga','Saint-Louis','Tambacounda','Matam'], conseil:'Suivi vétérinaire mensuel. Vaccination FVR en octobre.'},
+    {culture:'Ovins (agnelage)',   semis:'Toute l'année',           recolte:'Avant Tabaski', regions:['Toutes régions'],                            conseil:'Engraissement 3 mois avant Tabaski. Aliment composé + paille.'},
+    {culture:'Volaille (poulet)',  semis:'Toute l'année',           recolte:'J+45 (chair)',  regions:['Toutes régions'],                            conseil:'Biosécurité stricte. Vaccination Newcastle à J8 et J21.'},
+    {culture:'Caprins (chevreau)', semis:'Octobre–Novembre',         recolte:'Toute l'année',regions:['Kaolack','Diourbel','Fatick'],               conseil:'Résistants à la chaleur. Vermifugation bi-annuelle.'},
+  ],
+};
+
+/* ── Données : Ravageurs et alertes ── */
+const ALERTES_RAVAGEURS = [
+  {nom:'Criquet pèlerin',    ic:'🦗', niveau:'élevé',  mois:['Août','Septembre','Octobre'], cultures:['Mil','Sorgho','Maïs','Riz'],   action:'Signaler immédiatement à la DAGPN (+221 33 849 70 00). Ne pas traiter seul.'},
+  {nom:'Chenille légionnaire', ic:'🐛', niveau:'élevé', mois:['Juillet','Août','Septembre'],cultures:['Maïs','Mil','Sorgho'],         action:'Traitement Coragen ou Ampligo. Surveillance nocturne recommandée.'},
+  {nom:'Pucerons arachide',  ic:'🪲', niveau:'moyen',  mois:['Août','Septembre'],            cultures:['Arachide'],                   action:'Pulvérisation Imidaclopride 200g/ha. Éviter les heures chaudes.'},
+  {nom:'Mildiou oignon',     ic:'🍄', niveau:'moyen',  mois:['Décembre','Janvier','Février'],cultures:['Oignon','Tomate'],            action:'Fongicide Mancozèbe. Éviter excès d'humidité. Rotation culturale.'},
+  {nom:'FMDV (Fièvre aphteuse)', ic:'🐄', niveau:'élevé', mois:['Novembre','Décembre'],     cultures:['Bovins','Ovins'],              action:'Vaccination annuelle obligatoire. Quarantaine 21 jours. Signaler à DIREL.'},
+  {nom:'Newcastle volaille', ic:'🐓', niveau:'élevé',  mois:['Toute l'année'],              cultures:['Volaille'],                   action:'Vaccination à J8, rappel J21. Biosécurité stricte. Mortalité 80% sans vaccin.'},
+];
+
+/* ── Données : Rendements de référence Sénégal ── */
+const RENDEMENTS_REF = {
+  'Arachide':   {min:800,  moy:1200, max:2000, unite:'kg/ha', px_moy:350},
+  'Mil':        {min:500,  moy:900,  max:1500, unite:'kg/ha', px_moy:200},
+  'Maïs':       {min:1500, moy:2500, max:4000, unite:'kg/ha', px_moy:180},
+  'Riz':        {min:2000, moy:3500, max:6000, unite:'kg/ha', px_moy:250},
+  'Niébé':      {min:400,  moy:700,  max:1200, unite:'kg/ha', px_moy:400},
+  'Sorgho':     {min:500,  moy:900,  max:1500, unite:'kg/ha', px_moy:160},
+  'Tomate':     {min:15000,moy:25000,max:40000,unite:'kg/ha', px_moy:100},
+  'Oignon':     {min:10000,moy:18000,max:30000,unite:'kg/ha', px_moy:150},
+  'Bovins':     {min:1,    moy:3,    max:6,    unite:'têtes/ha',px_moy:380000},
+  'Ovins':      {min:3,    moy:6,    max:12,   unite:'têtes/ha',px_moy:80000},
+  'Volaille':   {min:500,  moy:1000, max:2000, unite:'têtes/an',px_moy:4500},
+};
+
+/* ── Météo : données statiques par région (à remplacer par API OpenWeather) ── */
+const METEO_REGIONS = {
+  'Dakar':       {temp:27, hum:75, pluie:'Jan–Mar : saison sèche', vent:'Harmattan modéré',  conseil:'Irrigation indispensable nov–mai'},
+  'Thiès':       {temp:28, hum:68, pluie:'Juil–Oct : 400–600mm',   vent:'Alize côtier',      conseil:'Idéal maraîchage oct–fév'},
+  'Diourbel':    {temp:30, hum:55, pluie:'Juil–Sep : 500–700mm',   vent:'Harmattan fort',    conseil:'Zone arachidière par excellence'},
+  'Saint-Louis': {temp:26, hum:65, pluie:'Août–Sep : 200–400mm',   vent:'Alize marin',       conseil:'Riz irrigué toute l'année possible'},
+  'Louga':       {temp:31, hum:45, pluie:'Août–Sep : 300–500mm',   vent:'Harmattan fort',    conseil:'Élevage extensif bovin-ovin'},
+  'Fatick':      {temp:29, hum:70, pluie:'Juil–Oct : 600–900mm',   vent:'Modéré',            conseil:'Niébé + arachide + maraîchage'},
+  'Kaolack':     {temp:31, hum:60, pluie:'Juil–Oct : 600–900mm',   vent:'Modéré',            conseil:'Capital arachidier du Sénégal'},
+  'Ziguinchor':  {temp:28, hum:85, pluie:'Jun–Oct : 1200–1600mm',  vent:'Faible',            conseil:'Riziculture + fruits tropicaux'},
+  'Tambacounda': {temp:33, hum:50, pluie:'Juil–Oct : 700–1000mm',  vent:'Harmattan',         conseil:'Maïs + sorgho + élevage bovin'},
+  'Kédougou':    {temp:30, hum:75, pluie:'Mai–Nov : 1200–1600mm',  vent:'Faible',            conseil:'Zone la plus arrosée du Sénégal'},
+  'Kolda':       {temp:29, hum:80, pluie:'Jun–Oct : 1000–1400mm',  vent:'Faible',            conseil:'Maïs + riz + élevage'},
+  'Sédhiou':     {temp:28, hum:82, pluie:'Jun–Oct : 1100–1500mm',  vent:'Faible',            conseil:'Riziculture + mangues'},
+  'Kaffrine':    {temp:32, hum:52, pluie:'Juil–Sep : 600–800mm',   vent:'Harmattan',         conseil:'Arachide + mil + sorgho'},
+  'Matam':       {temp:34, hum:40, pluie:'Août–Sep : 300–500mm',   vent:'Harmattan fort',    conseil:'Élevage + cultures irriguées bord fleuve'},
+  'Podor':       {temp:35, hum:35, pluie:'Août–Sep : 200–350mm',   vent:'Harmattan très fort',conseil:'Cultures de décrues + élevage camelin'},
+};
+
+/* ══════════════════════════════════════════════════════
+   COMPOSANT OUTILS AGRICOLES
+══════════════════════════════════════════════════════ */
+function OutilsAgricoles({user, toast}) {
+  const [onglet, setOnglet] = React.useState('calculateur');
+  const regionUser = user.region || 'Dakar';
+  const secteurUser = user.secteur || 'agriculture';
+  const moisCourant = new Date().toLocaleString('fr-FR',{month:'long'}).charAt(0).toUpperCase()+new Date().toLocaleString('fr-FR',{month:'long'}).slice(1);
+
+  // ── CALCULATEUR ──────────────────────────────────────
+  const [calc, setCalc] = React.useState({
+    culture: 'Arachide',
+    superficie: '',
+    rendement: '',
+    prixVente: '',
+    coutSemences: '',
+    coutIntrants: '',
+    coutMain: '',
+    coutAutres: '',
+  });
+  const [resultat, setResultat] = React.useState(null);
+
+  const refCulture = RENDEMENTS_REF[calc.culture] || RENDEMENTS_REF['Arachide'];
+
+  const calculer = (e) => {
+    e.preventDefault();
+    const S = parseFloat(calc.superficie) || 0;
+    const R = parseFloat(calc.rendement) || refCulture.moy;
+    const Px = parseFloat(calc.prixVente) || refCulture.px_moy;
+    const cS = parseFloat(calc.coutSemences) || 0;
+    const cI = parseFloat(calc.coutIntrants) || 0;
+    const cM = parseFloat(calc.coutMain) || 0;
+    const cA = parseFloat(calc.coutAutres) || 0;
+    if (!S) { toast('Entrez la superficie','e'); return; }
+    const production = S * R;
+    const revenus = production * Px;
+    const charges = (cS + cI + cM + cA) * S;
+    const benefice = revenus - charges;
+    const rentabilite = charges > 0 ? Math.round((benefice / charges) * 100) : 0;
+    const roi = charges > 0 ? Math.round((revenus / charges - 1) * 100) : 0;
+    setResultat({ production, revenus, charges, benefice, rentabilite, roi, S, R, Px });
+  };
+
+  // ── MÉTÉO ────────────────────────────────────────────
+  const [regionMeteo, setRegionMeteo] = React.useState(regionUser);
+  const meteo = METEO_REGIONS[regionMeteo] || METEO_REGIONS['Dakar'];
+
+  // ── CALENDRIER ───────────────────────────────────────
+  const [filterRegion, setFilterRegion] = React.useState('all');
+  const [filterSecteur, setFilterSecteur] = React.useState(secteurUser);
+  const calData = CALENDRIER[filterSecteur] || CALENDRIER.agriculture;
+  const calFiltre = filterRegion==='all' ? calData : calData.filter(c=>c.regions.some(r=>r.includes(filterRegion)||filterRegion.includes(r)));
+  const moisEnCours = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'][new Date().getMonth()];
+
+  // ── ALERTES ──────────────────────────────────────────
+  const alertesMois = ALERTES_RAVAGEURS.filter(a=>
+    a.mois.includes(moisEnCours) || a.mois.includes('Toute l'année')
+  );
+
+  const prix = (n) => n ? Math.round(n).toLocaleString('fr-FR')+' FCFA' : '—';
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-tag">Outils Agricoles</div>
+        <div className="ph-title">🌾 AgriTools — Optimisez vos cultures</div>
+        <div className="ph-sub">Calculateur · Météo · Calendrier · Alertes ravageurs</div>
+      </div>
+
+      {/* ONGLETS */}
+      <div style={{padding:'0 1.25rem',display:'flex',gap:'.4rem',flexWrap:'wrap',marginBottom:'1rem',borderBottom:'1px solid var(--border)'}}>
+        {[
+          ['calculateur','🧮 Calculateur'],
+          ['meteo','🌤 Météo'],
+          ['calendrier','📅 Calendrier'],
+          ['alertes','⚠ Alertes'],
+        ].map(([id,lbl])=>(
+          <div key={id} onClick={()=>setOnglet(id)} style={{
+            padding:'.5rem .9rem',cursor:'pointer',fontWeight:onglet===id?700:400,
+            color:onglet===id?'var(--lime)':'var(--ink3)',
+            borderBottom:onglet===id?'2px solid var(--lime)':'2px solid transparent',
+            fontSize:'.83rem',whiteSpace:'nowrap',
+          }}>{lbl}</div>
+        ))}
+      </div>
+
+      <div className="content">
+
+        {/* ═══ CALCULATEUR RENDEMENT & RENTABILITÉ ═══ */}
+        {onglet==='calculateur' && (
+          <div className="g2">
+            <div className="card">
+              <div className="card-title">🧮 Calculateur de rentabilité</div>
+              <form onSubmit={calculer}>
+                {/* Culture */}
+                <div className="fg">
+                  <label>Culture / Élevage</label>
+                  <select value={calc.culture} onChange={e=>setCalc(p=>({...p,culture:e.target.value,rendement:'',prixVente:''}))}>
+                    {Object.keys(RENDEMENTS_REF).map(c=><option key={c}>{c}</option>)}
+                  </select>
+                </div>
+
+                {/* Référence */}
+                <div style={{padding:'.6rem .75rem',background:'rgba(90,158,32,.08)',borderRadius:'8px',marginBottom:'1rem',fontSize:'.8rem'}}>
+                  <div style={{fontWeight:600,color:'var(--lime)',marginBottom:'.3rem'}}>📊 Référence {calc.culture} — Sénégal</div>
+                  <div style={{display:'flex',gap:'1rem',flexWrap:'wrap',color:'var(--ink3)'}}>
+                    <span>Min : <strong>{refCulture.min.toLocaleString('fr-FR')} {refCulture.unite}</strong></span>
+                    <span>Moyen : <strong style={{color:'var(--lime)'}}>{refCulture.moy.toLocaleString('fr-FR')} {refCulture.unite}</strong></span>
+                    <span>Max : <strong>{refCulture.max.toLocaleString('fr-FR')} {refCulture.unite}</strong></span>
+                    <span>Prix moy : <strong style={{color:'var(--gold2)'}}>{refCulture.px_moy.toLocaleString('fr-FR')} FCFA/{refCulture.unite.split('/')[1]||'unité'}</strong></span>
+                  </div>
+                </div>
+
+                <div className="fr">
+                  <div className="fg">
+                    <label>Superficie (ha) *</label>
+                    <input required type="number" min="0.1" step="0.1" placeholder="Ex: 2.5" value={calc.superficie} onChange={e=>setCalc(p=>({...p,superficie:e.target.value}))}/>
+                  </div>
+                  <div className="fg">
+                    <label>Rendement estimé ({refCulture.unite})</label>
+                    <input type="number" min="1" placeholder={`Défaut: ${refCulture.moy.toLocaleString('fr-FR')}`} value={calc.rendement} onChange={e=>setCalc(p=>({...p,rendement:e.target.value}))}/>
+                  </div>
+                </div>
+                <div className="fg">
+                  <label>Prix de vente (FCFA/{refCulture.unite.split('/')[1]||'unité'})</label>
+                  <input type="number" min="1" placeholder={`Défaut: ${refCulture.px_moy.toLocaleString('fr-FR')}`} value={calc.prixVente} onChange={e=>setCalc(p=>({...p,prixVente:e.target.value}))}/>
+                </div>
+
+                <div style={{fontWeight:600,fontSize:'.82rem',color:'var(--ink3)',margin:'.75rem 0 .4rem'}}>Charges par hectare (FCFA/ha)</div>
+                <div className="fr">
+                  <div className="fg"><label>Semences/Géniteurs</label><input type="number" min="0" placeholder="0" value={calc.coutSemences} onChange={e=>setCalc(p=>({...p,coutSemences:e.target.value}))}/></div>
+                  <div className="fg"><label>Intrants/Aliments</label><input type="number" min="0" placeholder="0" value={calc.coutIntrants} onChange={e=>setCalc(p=>({...p,coutIntrants:e.target.value}))}/></div>
+                </div>
+                <div className="fr">
+                  <div className="fg"><label>Main d'œuvre</label><input type="number" min="0" placeholder="0" value={calc.coutMain} onChange={e=>setCalc(p=>({...p,coutMain:e.target.value}))}/></div>
+                  <div className="fg"><label>Autres charges</label><input type="number" min="0" placeholder="0" value={calc.coutAutres} onChange={e=>setCalc(p=>({...p,coutAutres:e.target.value}))}/></div>
+                </div>
+                <button type="submit" className="btn btn-lime w100" style={{justifyContent:'center',marginTop:'.5rem'}}>Calculer la rentabilité →</button>
+              </form>
+            </div>
+
+            {/* Résultats */}
+            <div>
+              {resultat ? (<>
+                <div className="card mb2" style={{border:`2px solid ${resultat.benefice>=0?'var(--lime)':'var(--rust2)'}`}}>
+                  <div className="card-title">{resultat.benefice>=0?'✅':'⚠'} Résultat — {calc.culture}</div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.75rem',marginBottom:'1rem'}}>
+                    {[
+                      ['Production totale', (resultat.production).toLocaleString('fr-FR')+' '+refCulture.unite.split('/')[0], 'var(--ink)'],
+                      ['Revenus bruts', prix(resultat.revenus), 'var(--lime)'],
+                      ['Total charges', prix(resultat.charges), 'var(--rust2)'],
+                      ['Bénéfice net', prix(resultat.benefice), resultat.benefice>=0?'var(--lime)':'var(--rust2)'],
+                    ].map(([lbl,val,col])=>(
+                      <div key={lbl} style={{padding:'.75rem',background:'var(--card2,#f5f5f5)',borderRadius:'10px'}}>
+                        <div style={{fontSize:'.72rem',color:'var(--ink3)',marginBottom:'.2rem'}}>{lbl}</div>
+                        <div style={{fontWeight:800,fontSize:'1.05rem',color:col}}>{val}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{display:'flex',gap:'1rem',justifyContent:'center',flexWrap:'wrap'}}>
+                    <div style={{textAlign:'center',padding:'.75rem 1.25rem',background:resultat.roi>=0?'rgba(90,158,32,.1)':'rgba(196,74,42,.1)',borderRadius:'10px'}}>
+                      <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>Retour sur investissement</div>
+                      <div style={{fontWeight:800,fontSize:'1.5rem',color:resultat.roi>=0?'var(--lime)':'var(--rust2)'}}>{resultat.roi}%</div>
+                    </div>
+                    <div style={{textAlign:'center',padding:'.75rem 1.25rem',background:'rgba(196,154,40,.1)',borderRadius:'10px'}}>
+                      <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>Bénéfice / ha</div>
+                      <div style={{fontWeight:800,fontSize:'1.5rem',color:'var(--gold2)'}}>{prix(resultat.benefice/resultat.S)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Conseil selon rentabilité */}
+                <div className="card" style={{background:resultat.roi>=50?'rgba(90,158,32,.06)':resultat.roi>=0?'rgba(196,154,40,.06)':'rgba(196,74,42,.06)'}}>
+                  <div style={{fontWeight:700,marginBottom:'.4rem'}}>
+                    {resultat.roi>=50?'🌟 Excellente rentabilité':resultat.roi>=20?'✅ Bonne rentabilité':resultat.roi>=0?'⚠ Rentabilité faible':'❌ Déficitaire'}
+                  </div>
+                  <div style={{fontSize:'.83rem',color:'var(--ink3)',lineHeight:1.6}}>
+                    {resultat.roi>=50 && 'Votre exploitation est très rentable. Envisagez d'agrandir la superficie ou d'investir dans du matériel.'}
+                    {resultat.roi>=20 && resultat.roi<50 && 'Rentabilité correcte. Optimisez vos charges (groupement d'achats d'intrants) pour améliorer la marge.'}
+                    {resultat.roi>=0 && resultat.roi<20 && 'Marge faible. Cherchez à augmenter le prix de vente via le Marché Cadran ou réduire les intrants.'}
+                    {resultat.roi<0 && 'Attention, cette campagne est déficitaire selon vos estimations. Vérifiez vos charges ou le prix de vente cible.'}
+                  </div>
+                  {resultat.charges===0&&<div style={{marginTop:'.5rem',fontSize:'.8rem',color:'var(--ink4)'}}>💡 Entrez vos charges pour un calcul plus précis</div>}
+                </div>
+              </>) : (
+                <div className="card" style={{textAlign:'center',padding:'2rem',color:'var(--ink3)'}}>
+                  <div style={{fontSize:'2.5rem',marginBottom:'.75rem'}}>🧮</div>
+                  <div style={{fontWeight:600,marginBottom:'.4rem'}}>Estimez votre rentabilité</div>
+                  <div style={{fontSize:'.83rem'}}>Entrez votre superficie et vos charges pour voir votre bénéfice estimé</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ═══ MÉTÉO PAR RÉGION ═══ */}
+        {onglet==='meteo' && (<>
+          <div style={{marginBottom:'1rem'}}>
+            <select value={regionMeteo} onChange={e=>setRegionMeteo(e.target.value)}
+              style={{padding:'.6rem 1rem',borderRadius:'10px',border:'1px solid var(--border)',background:'var(--card)',color:'var(--ink)',fontSize:'.9rem',width:'100%',maxWidth:'300px'}}>
+              {REGIONS.map(r=><option key={r}>{r}</option>)}
+            </select>
+          </div>
+
+          {/* Carte météo région */}
+          <div className="card mb2" style={{background:'linear-gradient(135deg,rgba(26,122,110,.12),rgba(90,158,32,.08))'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'1rem'}}>
+              <div>
+                <div style={{fontWeight:800,fontSize:'1.3rem',color:'var(--ink)'}}>📍 {regionMeteo}</div>
+                <div style={{fontSize:'.82rem',color:'var(--ink3)',marginTop:'.2rem'}}>Données climatiques de référence</div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontSize:'2.5rem',fontWeight:900,color:'var(--amber2,#f59f00)'}}>{meteo.temp}°C</div>
+                <div style={{fontSize:'.75rem',color:'var(--ink3)'}}>Temp. moyenne</div>
+              </div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:'1rem'}}>
+              {[
+                ['💧 Humidité', meteo.hum+'%'],
+                ['🌧 Pluies', meteo.pluie],
+                ['💨 Vent', meteo.vent],
+              ].map(([lbl,val])=>(
+                <div key={lbl} style={{padding:'.75rem',background:'rgba(255,255,255,.5)',borderRadius:'8px'}}>
+                  <div style={{fontSize:'.75rem',color:'var(--ink3)',marginBottom:'.2rem'}}>{lbl}</div>
+                  <div style={{fontWeight:600,fontSize:'.9rem',color:'var(--ink)'}}>{val}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Conseil agricole */}
+          <div className="card mb2" style={{background:'rgba(90,158,32,.06)',border:'1px solid rgba(90,158,32,.2)'}}>
+            <div style={{fontWeight:700,color:'var(--lime)',marginBottom:'.5rem'}}>🌾 Conseil agricole pour {regionMeteo}</div>
+            <div style={{fontSize:'.87rem',color:'var(--ink)',lineHeight:1.7}}>{meteo.conseil}</div>
+          </div>
+
+          {/* Cultures recommandées pour cette région */}
+          <div className="card">
+            <div className="card-title">🌱 Cultures recommandées pour {regionMeteo}</div>
+            {CALENDRIER.agriculture.filter(c=>c.regions.some(r=>r.includes(regionMeteo)||regionMeteo.includes(r))).length===0
+              ? <div style={{color:'var(--ink3)',fontSize:'.85rem'}}>Consultez un agronome local pour des recommandations spécifiques.</div>
+              : CALENDRIER.agriculture.filter(c=>c.regions.some(r=>r.includes(regionMeteo)||regionMeteo.includes(r))).map(c=>(
+                <div key={c.culture} style={{padding:'.6rem 0',borderBottom:'1px solid var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center',gap:'1rem'}}>
+                  <div>
+                    <div style={{fontWeight:600,fontSize:'.88rem',color:'var(--ink)'}}>{c.culture}</div>
+                    <div style={{fontSize:'.76rem',color:'var(--ink3)'}}>Semis : {c.semis} · Récolte : {c.recolte}</div>
+                  </div>
+                  <span className="chip ch-lime" style={{fontSize:'.7rem',whiteSpace:'nowrap'}}>✅ Adapté</span>
+                </div>
+              ))
+            }
+          </div>
+        </>)}
+
+        {/* ═══ CALENDRIER CULTURAL ═══ */}
+        {onglet==='calendrier' && (<>
+          <div style={{display:'flex',gap:'.5rem',marginBottom:'1rem',flexWrap:'wrap'}}>
+            <select value={filterSecteur} onChange={e=>setFilterSecteur(e.target.value)}
+              style={{padding:'.5rem .75rem',borderRadius:'8px',border:'1px solid var(--border)',background:'var(--card)',color:'var(--ink)',fontSize:'.85rem'}}>
+              <option value="agriculture">🌾 Agriculture</option>
+              <option value="elevage">🐄 Élevage</option>
+            </select>
+            <select value={filterRegion} onChange={e=>setFilterRegion(e.target.value)}
+              style={{padding:'.5rem .75rem',borderRadius:'8px',border:'1px solid var(--border)',background:'var(--card)',color:'var(--ink)',fontSize:'.85rem'}}>
+              <option value="all">Toutes les régions</option>
+              {REGIONS.map(r=><option key={r}>{r}</option>)}
+            </select>
+          </div>
+
+          {/* Mois en cours */}
+          <div style={{padding:'.6rem 1rem',background:'rgba(196,154,40,.1)',borderRadius:'8px',marginBottom:'1rem',fontSize:'.83rem',color:'var(--gold2)',fontWeight:600}}>
+            📅 Nous sommes en {moisEnCours} — Les cultures en cours sont surlignées
+          </div>
+
+          <div style={{display:'flex',flexDirection:'column',gap:'.75rem'}}>
+            {calFiltre.map(c=>{
+              const ref = RENDEMENTS_REF[c.culture];
+              const enCours = c.semis.includes(moisEnCours)||c.recolte.includes(moisEnCours);
+              return (
+                <div key={c.culture} className="card" style={{border:enCours?'1.5px solid var(--lime)':'1px solid var(--border)'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'.5rem'}}>
+                    <div style={{fontWeight:700,fontSize:'1rem',color:'var(--ink)'}}>{c.culture}</div>
+                    {enCours&&<span className="chip ch-lime" style={{fontSize:'.7rem'}}>📅 Période en cours</span>}
+                  </div>
+                  <div style={{display:'flex',gap:'1.5rem',flexWrap:'wrap',fontSize:'.82rem',marginBottom:'.6rem'}}>
+                    <span style={{color:'var(--lime)'}}>🌱 Semis : <strong>{c.semis}</strong></span>
+                    <span style={{color:'var(--gold2)'}}>🌾 Récolte : <strong>{c.recolte}</strong></span>
+                  </div>
+                  <div style={{fontSize:'.8rem',color:'var(--ink3)',marginBottom:'.5rem'}}>
+                    📍 Régions : {c.regions.join(' · ')}
+                  </div>
+                  <div style={{padding:'.5rem .75rem',background:'rgba(26,122,110,.06)',borderRadius:'6px',fontSize:'.8rem',color:'var(--teal2)',lineHeight:1.6}}>
+                    💡 {c.conseil}
+                  </div>
+                  {ref&&(
+                    <div style={{marginTop:'.6rem',display:'flex',gap:'1rem',fontSize:'.78rem',color:'var(--ink3)',flexWrap:'wrap'}}>
+                      <span>📊 Rendement moyen : <strong style={{color:'var(--lime)'}}>{ref.moy.toLocaleString('fr-FR')} {ref.unite}</strong></span>
+                      <span>💰 Prix moyen : <strong style={{color:'var(--gold2)'}}>{ref.px_moy.toLocaleString('fr-FR')} FCFA</strong></span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>)}
+
+        {/* ═══ ALERTES RAVAGEURS ═══ */}
+        {onglet==='alertes' && (<>
+          <div style={{padding:'.75rem 1rem',background:'rgba(196,74,42,.08)',borderRadius:'10px',marginBottom:'1.25rem',border:'1px solid rgba(196,74,42,.2)'}}>
+            <div style={{fontWeight:700,color:'var(--rust2)',marginBottom:'.3rem'}}>⚠ Alertes actives pour {moisEnCours}</div>
+            <div style={{fontSize:'.82rem',color:'var(--ink3)'}}>
+              {alertesMois.length} menace(s) à surveiller ce mois-ci dans votre région
+            </div>
+          </div>
+
+          {/* Alertes du mois */}
+          {alertesMois.length > 0 && (
+            <div style={{marginBottom:'1.5rem'}}>
+              <div style={{fontWeight:600,marginBottom:'.75rem',color:'var(--ink)'}}>🔴 Actives en {moisEnCours}</div>
+              {alertesMois.map(a=>(
+                <div key={a.nom} className="card mb2" style={{borderLeft:`4px solid ${a.niveau==='élevé'?'var(--rust2)':'var(--gold2)'}`}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'.5rem'}}>
+                    <div style={{fontWeight:700,fontSize:'1rem'}}>{a.ic} {a.nom}</div>
+                    <span style={{fontSize:'.72rem',fontWeight:700,padding:'.2rem .6rem',borderRadius:'99px',
+                      background:a.niveau==='élevé'?'rgba(196,74,42,.12)':'rgba(196,154,40,.12)',
+                      color:a.niveau==='élevé'?'var(--rust2)':'var(--gold2)'}}>
+                      {a.niveau==='élevé'?'🔴 Risque élevé':'🟡 Risque modéré'}
+                    </span>
+                  </div>
+                  <div style={{fontSize:'.8rem',color:'var(--ink3)',marginBottom:'.5rem'}}>
+                    🌾 Cultures touchées : {a.cultures.join(', ')}
+                  </div>
+                  <div style={{padding:'.6rem .75rem',background:'rgba(196,74,42,.06)',borderRadius:'6px',fontSize:'.82rem',color:'var(--ink)',lineHeight:1.6}}>
+                    <strong>Action recommandée :</strong> {a.action}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Toutes les alertes */}
+          <div>
+            <div style={{fontWeight:600,marginBottom:'.75rem',color:'var(--ink3)'}}>📋 Calendrier annuel des menaces</div>
+            {ALERTES_RAVAGEURS.filter(a=>!alertesMois.includes(a)).map(a=>(
+              <div key={a.nom} className="card mb2" style={{opacity:.7}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'.4rem'}}>
+                  <div style={{fontWeight:600}}>{a.ic} {a.nom}</div>
+                  <span style={{fontSize:'.72rem',color:'var(--ink3)'}}>{a.mois.join(', ')}</span>
+                </div>
+                <div style={{fontSize:'.78rem',color:'var(--ink3)'}}>Cultures : {a.cultures.join(', ')}</div>
+              </div>
+            ))}
+          </div>
+        </>)}
+
+      </div>
+    </div>
+  );
+}
+
 function Login({onLogin}){
   const [tab,setTab]=useState('paysan');
   const [f,setF]=useState({nom:'',tel:'',village:'',region:'Dakar',secteur:'agriculture',role:'paysan'});
@@ -2605,6 +3035,7 @@ function App(){
     {id:'investissement',ic:'💼',label:'Investissement',dot:openInvests>0?openInvests:null,dotCls:'dot-green'},
     ...(isAdm?[{id:'admin',ic:'👑',label:'Administration'}]:[]),
     {id:'marche',ic:'🛒',label:'Marché Cadran'},
+    {id:'outils',ic:'🌾',label:'Outils Agricoles'},
     {id:'profil',ic:'👤',label:'Mon profil'},
   ];
 
@@ -2616,6 +3047,7 @@ function App(){
     investissement:<Investissement user={user} setUser={setUserWrapper} projets={projets} setProjets={setProjetsWrapper} toast={toast}/>,
     admin:<Admin user={user} tontines={tontines} setTontines={setTontinesWrapper} toast={toast}/>,
     marche:<Marche user={user} toast={toast}/>,
+    outils:<OutilsAgricoles user={user} toast={toast}/>,
     profil:<Profil user={user} setUser={setUserWrapper} toast={toast}/>,
   };
 
