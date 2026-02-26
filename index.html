@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>TONTINE+ · Plateforme Nationale · Sénégal</title>
+<title>AgriTontine+ · Plateforme Nationale · Sénégal</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;0,900;1,700&family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -1437,7 +1437,7 @@ function Investissement({user,setUser,projets,setProjets,toast}){
           <div className="card mb3" style={{borderColor:'var(--border3)'}}>
             <div className="card-title">📤 Soumettre un projet à financer</div>
             <div className="info-box info-teal mb2 t-sm">
-              Votre projet sera visible par tous les membres de TONTINE+. Décrivez-le précisément pour attirer des investisseurs.
+              Votre projet sera visible par tous les membres d'AgriTontine+. Décrivez-le précisément pour attirer des investisseurs.
             </div>
             <div className="fr">
               <div className="fg"><label>Nom du projet</label><input value={fp.nom} onChange={e=>setFp({...fp,nom:e.target.value})} placeholder="Ex: Ferme avicole moderne"/></div>
@@ -1778,7 +1778,7 @@ function Login({onLogin}){
   return(
     <div className="login-bg">
       <div className="login-card">
-        <div className="login-logo">TONTINE<b>+</b></div>
+        <div className="login-logo">AgriTontine<b>+</b></div>
         <div className="login-sub">Plateforme nationale de tontines agricoles<br/>Agriculture · Élevage · Investissement · Sénégal 🗄</div>
         <div className="login-flags">
           {SECTEURS.map(s=><span key={s.id} className={`sector-badge ${s.cls}`} style={{fontSize:'.62rem'}}>{s.ic} {s.label}</span>)}
@@ -1998,7 +1998,7 @@ function App(){
 
   if (appLoading) return (
     <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)',flexDirection:'column',gap:'1rem'}}>
-      <div style={{fontFamily:'var(--f-d)',fontSize:'2.5rem',color:'var(--lime)'}}>TONTINE+</div>
+      <div style={{fontFamily:'var(--f-d)',fontSize:'2.5rem',color:'var(--lime)'}}>AgriTontine+</div>
       <div style={{color:'var(--ink3)',fontSize:'.9rem'}}>⏳ Chargement depuis Supabase...</div>
     </div>
   );
@@ -2034,8 +2034,8 @@ function App(){
     <div className="app">
       <div className="sidebar">
         <div className="sb-brand">
-          <div className="sb-logo">TONTINE<span>+</span></div>
-          <div className="sb-tagline">Plateforme nationale</div>
+          <div className="sb-logo">AgriTontine<b>+</b></div>
+          <div className="sb-tagline">Agri · Élevage · Investissement</div>
           <div className="sb-flag">🇸🇳 Sénégal · 14 régions</div>
           <div className="sb-flag" style={{marginTop:'.25rem',background:'rgba(26,158,142,.12)',color:'var(--teal2)',borderColor:'rgba(26,158,142,.25)'}}>🗄 Supabase Live</div>
         </div>
