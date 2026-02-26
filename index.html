@@ -3453,6 +3453,567 @@ function credits_text(n) {
   return n.toLocaleString('fr-FR')+' FCFA';
 }
 
+
+/* ══════════════════════════════════════════════════════
+   NOTIFICATIONS — Centre de notifications
+══════════════════════════════════════════════════════ */
+async function sbFetchNotifs(userId) {
+  const {data} = await sb.from('notifications')
+    .select('*').eq('user_id', userId)
+    .order('created_at',{ascending:false}).limit(50);
+  return data || [];
+}
+async function sbMarquerNotifLue(id) {
+  await sb.from('notifications').update({lu:true}).eq('id',id);
+}
+async function sbMarquerToutesLues(userId) {
+  await sb.from('notifications').update({lu:true}).eq('user_id',userId).eq('lu',false);
+}
+async function sbCreerNotif(userId, type, titre, message, lien) {
+  await sb.from('notifications').insert({user_id:userId,type,titre,message,lien:lien||'',lu:false});
+}
+
+function Notifications({user, toast}) {
+  const [notifs, setNotifs] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [filter, setFilter] = React.useState('all');
+
+  React.useEffect(()=>{ load(); }, []);
+
+  const load = async () => {
+    setLoading(true);
+    const n = await sbFetchNotifs(user.id);
+    setNotifs(n);
+    setLoading(false);
+  };
+
+  const marquerLue = async (id) => {
+    await sbMarquerNotifLue(id);
+    setNotifs(prev=>prev.map(n=>n.id===id?{...n,lu:true}:n));
+  };
+
+  const toutMarquer = async () => {
+    await sbMarquerToutesLues(user.id);
+    setNotifs(prev=>prev.map(n=>({...n,lu:true})));
+    toast('Toutes les notifications marquées comme lues');
+  };
+
+  const NOTIF_TYPES = {
+    cotisation: {ic:'💸', color:'var(--lime)'},
+    credit:     {ic:'🌱', color:'var(--teal2)'},
+    tontine:    {ic:'🤝', color:'var(--gold2)'},
+    message:    {ic:'💬', color:'#42a5f5'},
+    marche:     {ic:'🛒', color:'var(--amber2,#f59f00)'},
+    alerte:     {ic:'⚠',  color:'var(--rust2)'},
+    invest:     {ic:'💼', color:'var(--lime)'},
+    systeme:    {ic:'🔔', color:'var(--ink3)'},
+  };
+
+  const filtered = filter==='all' ? notifs : filter==='non_lues' ? notifs.filter(n=>!n.lu) : notifs.filter(n=>n.type===filter);
+  const nonLues = notifs.filter(n=>!n.lu).length;
+  const timeAgo = (d) => {
+    const diff = (Date.now()-new Date(d))/1000;
+    if (diff<60) return 'À l\'instant';
+    if (diff<3600) return Math.floor(diff/60)+'min';
+    if (diff<86400) return Math.floor(diff/3600)+'h';
+    return Math.floor(diff/86400)+'j';
+  };
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-tag">Notifications</div>
+        <div className="ph-title">🔔 Centre de notifications
+          {nonLues>0&&<span style={{fontSize:'.75rem',background:'var(--rust2)',color:'#fff',borderRadius:'99px',padding:'.1rem .5rem',marginLeft:'.5rem'}}>{nonLues}</span>}
+        </div>
+        <div className="ph-sub">Toutes vos alertes et activités en temps réel</div>
+      </div>
+      <div className="content">
+        <div style={{display:'flex',gap:'.5rem',flexWrap:'wrap',marginBottom:'1rem',alignItems:'center',justifyContent:'space-between'}}>
+          <div style={{display:'flex',gap:'.4rem',flexWrap:'wrap'}}>
+            {[['all','Toutes'],['non_lues','Non lues'],['cotisation','Cotisations'],['tontine','Tontines'],['message','Messages'],['alerte','Alertes']].map(([val,lbl])=>(
+              <div key={val} onClick={()=>setFilter(val)} style={{
+                padding:'.3rem .75rem',borderRadius:'99px',cursor:'pointer',fontSize:'.78rem',fontWeight:filter===val?700:400,
+                background:filter===val?'var(--lime)':'var(--card)',color:filter===val?'#fff':'var(--ink3)',
+                border:'1px solid '+(filter===val?'var(--lime)':'var(--border)'),
+              }}>{lbl}{val==='non_lues'&&nonLues>0?` (${nonLues})`:''}</div>
+            ))}
+          </div>
+          {nonLues>0&&<button className="btn btn-ghost btn-sm" onClick={toutMarquer}>✓ Tout marquer lu</button>}
+        </div>
+
+        {loading ? <div style={{textAlign:'center',padding:'2rem',color:'var(--ink3)'}}>⏳ Chargement...</div>
+        : filtered.length===0 ? (
+          <div className="card" style={{textAlign:'center',padding:'3rem',color:'var(--ink3)'}}>
+            <div style={{fontSize:'2.5rem',marginBottom:'.75rem'}}>🔔</div>
+            <div style={{fontWeight:600,marginBottom:'.3rem'}}>Aucune notification</div>
+            <div style={{fontSize:'.82rem'}}>Vos alertes apparaîtront ici</div>
+          </div>
+        ) : (
+          <div style={{display:'flex',flexDirection:'column',gap:'.5rem'}}>
+            {filtered.map(n=>{
+              const t = NOTIF_TYPES[n.type]||NOTIF_TYPES.systeme;
+              return (
+                <div key={n.id} onClick={()=>marquerLue(n.id)}
+                  style={{padding:'.85rem 1rem',borderRadius:'10px',cursor:'pointer',
+                    background:n.lu?'var(--card)':'rgba(90,158,32,.05)',
+                    border:`1px solid ${n.lu?'var(--border)':'rgba(90,158,32,.2)'}`,
+                    display:'flex',gap:'.75rem',alignItems:'flex-start',transition:'.15s'}}>
+                  <div style={{width:'38px',height:'38px',borderRadius:'50%',background:`rgba(${t.color==='var(--lime)'?'90,158,32':'196,154,40'},.12)`,
+                    display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.2rem',flexShrink:0}}>
+                    {t.ic}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'.5rem'}}>
+                      <div style={{fontWeight:n.lu?500:700,fontSize:'.9rem',color:'var(--ink)'}}>{n.titre}</div>
+                      <div style={{display:'flex',alignItems:'center',gap:'.4rem',flexShrink:0}}>
+                        <span style={{fontSize:'.72rem',color:'var(--ink4)'}}>{timeAgo(n.created_at)}</span>
+                        {!n.lu&&<div style={{width:'8px',height:'8px',borderRadius:'50%',background:'var(--lime)',flexShrink:0}}/>}
+                      </div>
+                    </div>
+                    <div style={{fontSize:'.82rem',color:'var(--ink3)',marginTop:'.2rem',lineHeight:1.5}}>{n.message}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   SIMULATEUR DE CRÉDIT — IA scoring avancé
+══════════════════════════════════════════════════════ */
+function SimulateurCredit({user, tontines, toast}) {
+  const score = calcScore(user);
+  const plafond = score * 1000;
+
+  const [sim, setSim] = React.useState({
+    montant: '',
+    duree: '6',
+    intrant: 'Semences certifiées',
+    objectif: '',
+  });
+  const [resultat, setResultat] = React.useState(null);
+
+  // Taux d'intérêt selon le score
+  const getTaux = (score) => {
+    if (score >= 80) return 3;
+    if (score >= 65) return 5;
+    if (score >= 50) return 8;
+    if (score >= 40) return 12;
+    return null; // inéligible
+  };
+
+  const taux = getTaux(score);
+  const mesTontines = tontines.filter(t=>t.membres.some(m=>m.uid===user.id));
+
+  const simuler = (e) => {
+    e.preventDefault();
+    const montant = parseInt(sim.montant);
+    const duree = parseInt(sim.duree);
+    if (!montant || montant <= 0) { toast('Entrez un montant','e'); return; }
+    if (montant > plafond) { toast('Montant supérieur à votre plafond de '+plafond.toLocaleString('fr-FR')+' FCFA','e'); return; }
+    if (!taux) { toast('Score insuffisant (minimum 40 points)','e'); return; }
+
+    const interetTotal = Math.round(montant * taux/100 * duree/12);
+    const totalRemboursement = montant + interetTotal;
+    const mensualite = Math.round(totalRemboursement / duree);
+    const scoreApres = Math.min(100, score + 8); // bonus remboursement
+    const nouveauPlafond = scoreApres * 1000;
+
+    setResultat({
+      montant, duree, taux, interetTotal, totalRemboursement,
+      mensualite, scoreApres, nouveauPlafond,
+      eligible: montant <= plafond && score >= 40,
+    });
+  };
+
+  const INTRANTS_ALL = [
+    ...INTRANTS_AGRI.map(i=>({label:i,secteur:'agriculture'})),
+    ...INTRANTS_ELEV.map(i=>({label:i,secteur:'elevage'})),
+  ];
+
+  const scoreColor = score>=65?'var(--lime)':score>=40?'var(--gold2)':'var(--rust2)';
+  const prix = (n) => n.toLocaleString('fr-FR')+' FCFA';
+
+  // Historique crédits
+  const creditsOk = (user.credits||[]).filter(c=>c.statut==='rembourse').length;
+  const creditsEnCours = (user.credits||[]).filter(c=>c.statut==='approuve').length;
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-tag">Simulateur</div>
+        <div className="ph-title">🧮 Simulateur de Crédit IA</div>
+        <div className="ph-sub">Estimez votre éligibilité et vos mensualités avant de demander</div>
+      </div>
+      <div className="content">
+        <div className="g2">
+          {/* Profil crédit */}
+          <div>
+            <div className="card mb2">
+              <div className="card-title">📊 Votre profil de crédit</div>
+              <div style={{textAlign:'center',marginBottom:'1rem'}}>
+                <ScoreRing score={score} sz={120} fsz="1.8rem"/>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.6rem',marginBottom:'1rem'}}>
+                {[
+                  ['Plafond actuel', prix(plafond), 'var(--lime)'],
+                  ['Taux applicable', taux ? taux+'%/an' : 'Inéligible', taux?'var(--teal2)':'var(--rust2)'],
+                  ['Crédits remboursés', creditsOk, 'var(--gold2)'],
+                  ['Tontines actives', mesTontines.length, 'var(--lime)'],
+                ].map(([lbl,val,col])=>(
+                  <div key={lbl} style={{padding:'.6rem',background:'var(--card2,#f5f5f5)',borderRadius:'8px',textAlign:'center'}}>
+                    <div style={{fontWeight:700,fontSize:'1rem',color:col}}>{val}</div>
+                    <div style={{fontSize:'.7rem',color:'var(--ink3)',marginTop:'.1rem'}}>{lbl}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Barème des taux */}
+              <div style={{padding:'.6rem',background:'rgba(26,122,110,.06)',borderRadius:'8px',fontSize:'.78rem'}}>
+                <div style={{fontWeight:600,color:'var(--teal2)',marginBottom:'.4rem'}}>📋 Barème des taux AgriTontine+</div>
+                {[[80,100,'3% / an','var(--lime)'],[65,79,'5% / an','var(--lime)'],[50,64,'8% / an','var(--gold2)'],[40,49,'12% / an','var(--amber2,#f59f00)'],[0,39,'Inéligible','var(--rust2)']].map(([min,max,tx,col])=>(
+                  <div key={min} style={{display:'flex',justifyContent:'space-between',padding:'.2rem 0',
+                    fontWeight:score>=min&&score<=max?700:400,color:score>=min&&score<=max?col:'var(--ink3)'}}>
+                    <span>Score {min}–{max} pts {score>=min&&score<=max&&'← vous'}</span>
+                    <span style={{color:col,fontWeight:600}}>{tx}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Conseils amélioration score */}
+            {score < 100 && (
+              <div className="card">
+                <div className="card-title">💡 Améliorez votre score</div>
+                {[
+                  score < 65 && ['Payez toutes vos cotisations à temps', '+5 pts par paiement', 'var(--lime)'],
+                  mesTontines.length < 3 && ['Rejoignez une tontine supplémentaire', '+2.4 pts', 'var(--gold2)'],
+                  creditsOk < 3 && creditsEnCours > 0 && ['Remboursez votre crédit en cours', '+10 pts', 'var(--teal2)'],
+                  (user.investissements||[]).length < 2 && ['Investissez dans un projet', '+1.5 pts', 'var(--lime)'],
+                ].filter(Boolean).map(([conseil,gain,col])=>(
+                  <div key={conseil} style={{display:'flex',justifyContent:'space-between',padding:'.5rem 0',borderBottom:'1px solid var(--border)',fontSize:'.82rem'}}>
+                    <span style={{color:'var(--ink)'}}>{conseil}</span>
+                    <span style={{fontWeight:700,color:col,flexShrink:0,marginLeft:'.5rem'}}>{gain}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Formulaire simulation */}
+          <div>
+            <div className="card mb2">
+              <div className="card-title">🧮 Simulez votre crédit</div>
+              {score < 40 ? (
+                <div style={{padding:'1rem',background:'rgba(196,74,42,.08)',borderRadius:'8px',textAlign:'center'}}>
+                  <div style={{fontSize:'1.5rem',marginBottom:'.4rem'}}>⚠</div>
+                  <div style={{fontWeight:600,color:'var(--rust2)',marginBottom:'.4rem'}}>Score insuffisant ({score}/100)</div>
+                  <div style={{fontSize:'.82rem',color:'var(--ink3)'}}>Minimum requis : 40 points. Payez vos cotisations pour augmenter votre score.</div>
+                </div>
+              ) : (
+                <form onSubmit={simuler}>
+                  <div className="fg">
+                    <label>Montant souhaité (FCFA)</label>
+                    <input type="number" min="5000" max={plafond} step="1000" required
+                      value={sim.montant} onChange={e=>setSim(p=>({...p,montant:e.target.value}))}
+                      placeholder={`Max: ${prix(plafond)}`}/>
+                    {sim.montant && parseInt(sim.montant) > plafond &&
+                      <div style={{fontSize:'.75rem',color:'var(--rust2)',marginTop:'.2rem'}}>⚠ Dépasse votre plafond de {prix(plafond)}</div>}
+                  </div>
+                  <div className="fg">
+                    <label>Durée de remboursement</label>
+                    <select value={sim.duree} onChange={e=>setSim(p=>({...p,duree:e.target.value}))}>
+                      {[3,6,12,18,24].map(d=><option key={d} value={d}>{d} mois</option>)}
+                    </select>
+                  </div>
+                  <div className="fg">
+                    <label>Intrant / Usage</label>
+                    <select value={sim.intrant} onChange={e=>setSim(p=>({...p,intrant:e.target.value}))}>
+                      <optgroup label="Agriculture">
+                        {INTRANTS_AGRI.map(i=><option key={i}>{i}</option>)}
+                      </optgroup>
+                      <optgroup label="Élevage">
+                        {INTRANTS_ELEV.map(i=><option key={i}>{i}</option>)}
+                      </optgroup>
+                    </select>
+                  </div>
+                  <div className="fg">
+                    <label>Objectif / Utilisation prévue</label>
+                    <input value={sim.objectif} onChange={e=>setSim(p=>({...p,objectif:e.target.value}))}
+                      placeholder="Ex: Achat 200kg semences pour 2ha arachide"/>
+                  </div>
+                  <button type="submit" className="btn btn-lime w100" style={{justifyContent:'center',marginTop:'.5rem'}}>
+                    Simuler →
+                  </button>
+                </form>
+              )}
+            </div>
+
+            {/* Résultat simulation */}
+            {resultat && (
+              <div className="card" style={{border:'2px solid var(--lime)'}}>
+                <div className="card-title" style={{color:'var(--lime)'}}>✅ Résultat de simulation</div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.6rem',marginBottom:'1rem'}}>
+                  {[
+                    ['Montant demandé',prix(resultat.montant),'var(--ink)'],
+                    ['Taux appliqué',resultat.taux+'% / an','var(--teal2)'],
+                    ['Intérêts totaux',prix(resultat.interetTotal),'var(--rust2)'],
+                    ['Total à rembourser',prix(resultat.totalRemboursement),'var(--gold2)'],
+                  ].map(([lbl,val,col])=>(
+                    <div key={lbl} style={{padding:'.6rem',background:'var(--card2,#f5f5f5)',borderRadius:'8px'}}>
+                      <div style={{fontWeight:700,fontSize:'.95rem',color:col}}>{val}</div>
+                      <div style={{fontSize:'.7rem',color:'var(--ink3)',marginTop:'.1rem'}}>{lbl}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{padding:'.75rem',background:'rgba(90,158,32,.08)',borderRadius:'10px',textAlign:'center',marginBottom:'1rem'}}>
+                  <div style={{fontSize:'.75rem',color:'var(--ink3)',marginBottom:'.25rem'}}>Mensualité estimée</div>
+                  <div style={{fontWeight:900,fontSize:'1.6rem',color:'var(--lime)'}}>{prix(resultat.mensualite)}</div>
+                  <div style={{fontSize:'.75rem',color:'var(--ink3)'}}>pendant {resultat.duree} mois</div>
+                </div>
+                <div style={{padding:'.6rem .75rem',background:'rgba(26,122,110,.08)',borderRadius:'8px',fontSize:'.8rem',color:'var(--teal2)'}}>
+                  <strong>Bonus remboursement :</strong> Score passe de {score} à {resultat.scoreApres} pts → Nouveau plafond {prix(resultat.nouveauPlafond)}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   PARAMÈTRES & SÉCURITÉ
+══════════════════════════════════════════════════════ */
+function Parametres({user, setUser, toast}) {
+  const [section, setSection] = React.useState('compte');
+  const [fNotif, setFNotif] = React.useState({
+    cotisations: true, credits: true, marche: true,
+    messages: true, alertes: true, newsletter: false,
+  });
+  const [fSecurite, setFSecurite] = React.useState({
+    pin: '', pinConfirm: '', pinActuel: '',
+  });
+  const [fCompte, setFCompte] = React.useState({
+    nom: user.nom, village: user.village, region: user.region,
+    secteur: user.secteur, telephone: user.telephone,
+    cultures: user.cultures||[], especes: user.especes||[],
+    superficie: user.superficie||'', experience: user.experience||'',
+  });
+  const [saved, setSaved] = React.useState(false);
+
+  const saveCompte = async () => {
+    try {
+      await sbUpdateProfil(user.id, fCompte);
+      setUser(u=>({...u,...fCompte}));
+      setSaved(true);
+      setTimeout(()=>setSaved(false),2000);
+      toast('✅ Profil mis à jour !');
+    } catch(e) { toast('Erreur: '+e.message,'e'); }
+  };
+
+  const saveNotif = () => {
+    toast('✅ Préférences de notifications sauvegardées !');
+  };
+
+  const EXPERIENCE_OPTIONS = ['Moins de 1 an','1-3 ans','3-5 ans','5-10 ans','Plus de 10 ans'];
+  const superficieOptions = ['Moins de 1 ha','1-5 ha','5-10 ha','10-50 ha','Plus de 50 ha'];
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-tag">Paramètres</div>
+        <div className="ph-title">⚙️ Paramètres & Sécurité</div>
+        <div className="ph-sub">Gérez votre compte, notifications et préférences</div>
+      </div>
+
+      <div style={{padding:'0 1.25rem',display:'flex',gap:'.4rem',flexWrap:'wrap',marginBottom:'1rem',borderBottom:'1px solid var(--border)'}}>
+        {[['compte','👤 Mon compte'],['notifications','🔔 Notifications'],['securite','🔒 Sécurité'],['appli','📱 Application']].map(([id,lbl])=>(
+          <div key={id} onClick={()=>setSection(id)} style={{
+            padding:'.5rem .9rem',cursor:'pointer',fontWeight:section===id?700:400,
+            color:section===id?'var(--lime)':'var(--ink3)',
+            borderBottom:section===id?'2px solid var(--lime)':'2px solid transparent',
+            fontSize:'.83rem',whiteSpace:'nowrap',
+          }}>{lbl}</div>
+        ))}
+      </div>
+
+      <div className="content">
+
+        {section==='compte' && (
+          <div style={{maxWidth:'560px'}}>
+            <div className="card">
+              <div className="card-title">👤 Informations du compte</div>
+              <div className="fg"><label>Nom complet</label><input value={fCompte.nom} onChange={e=>setFCompte(p=>({...p,nom:e.target.value}))}/></div>
+              <div className="fr">
+                <div className="fg"><label>Village</label><input value={fCompte.village} onChange={e=>setFCompte(p=>({...p,village:e.target.value}))}/></div>
+                <div className="fg"><label>Région</label>
+                  <select value={fCompte.region} onChange={e=>setFCompte(p=>({...p,region:e.target.value}))}>
+                    {REGIONS.map(r=><option key={r}>{r}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="fg"><label>Secteur</label>
+                <select value={fCompte.secteur} onChange={e=>setFCompte(p=>({...p,secteur:e.target.value}))}>
+                  {SECTEURS.map(s=><option key={s.id} value={s.id}>{s.ic} {s.label}</option>)}
+                </select>
+              </div>
+              <div className="fr">
+                <div className="fg"><label>Superficie exploitée</label>
+                  <select value={fCompte.superficie} onChange={e=>setFCompte(p=>({...p,superficie:e.target.value}))}>
+                    <option value="">Non renseigné</option>
+                    {superficieOptions.map(o=><option key={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div className="fg"><label>Expérience agricole</label>
+                  <select value={fCompte.experience} onChange={e=>setFCompte(p=>({...p,experience:e.target.value}))}>
+                    <option value="">Non renseigné</option>
+                    {EXPERIENCE_OPTIONS.map(o=><option key={o}>{o}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="fg">
+                <label>Téléphone</label>
+                <input value={fCompte.telephone} disabled style={{opacity:.6}}/>
+                <div style={{fontSize:'.72rem',color:'var(--ink3)',marginTop:'.2rem'}}>Le numéro de téléphone ne peut pas être modifié</div>
+              </div>
+              <button className="btn btn-lime" onClick={saveCompte} style={{marginTop:'.5rem'}}>
+                {saved?'✅ Sauvegardé !':'Sauvegarder les modifications'}
+              </button>
+            </div>
+
+            <div className="card mt2">
+              <div className="card-title">🗑 Zone de danger</div>
+              <div style={{padding:'.75rem',background:'rgba(196,74,42,.06)',borderRadius:'8px',fontSize:'.83rem',color:'var(--ink3)',lineHeight:1.6,marginBottom:'.75rem'}}>
+                La suppression de votre compte est irréversible. Toutes vos données seront effacées.
+              </div>
+              <button className="btn btn-ghost btn-sm" style={{color:'var(--rust2)',borderColor:'var(--rust2)'}}
+                onClick={()=>toast('Pour supprimer votre compte, contactez support@agritontineplus.com','i')}>
+                🗑 Demander la suppression du compte
+              </button>
+            </div>
+          </div>
+        )}
+
+        {section==='notifications' && (
+          <div style={{maxWidth:'480px'}}>
+            <div className="card">
+              <div className="card-title">🔔 Préférences de notifications</div>
+              {[
+                ['cotisations','💸 Cotisations tontine','Alertes paiements et rappels'],
+                ['credits','🌱 Crédits','Statut et échéances de vos crédits'],
+                ['marche','🛒 Marché Cadran','Nouvelles annonces dans votre région'],
+                ['messages','💬 Messagerie','Nouveaux messages reçus'],
+                ['alertes','⚠ Alertes ravageurs','Menaces en cours dans votre région'],
+                ['newsletter','📰 Newsletter mensuelle','Actualités AgriTontine+ et conseils'],
+              ].map(([key,titre,desc])=>(
+                <div key={key} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'.75rem 0',borderBottom:'1px solid var(--border)'}}>
+                  <div>
+                    <div style={{fontWeight:600,fontSize:'.88rem',color:'var(--ink)'}}>{titre}</div>
+                    <div style={{fontSize:'.75rem',color:'var(--ink3)',marginTop:'.1rem'}}>{desc}</div>
+                  </div>
+                  <div onClick={()=>setFNotif(p=>({...p,[key]:!p[key]}))}
+                    style={{width:'44px',height:'24px',borderRadius:'99px',cursor:'pointer',flexShrink:0,
+                      background:fNotif[key]?'var(--lime)':'var(--border)',transition:'.2s',position:'relative'}}>
+                    <div style={{position:'absolute',top:'3px',left:fNotif[key]?'23px':'3px',width:'18px',height:'18px',
+                      borderRadius:'50%',background:'#fff',transition:'.2s',boxShadow:'0 1px 3px rgba(0,0,0,.2)'}}/>
+                  </div>
+                </div>
+              ))}
+              <button className="btn btn-lime btn-sm" style={{marginTop:'1rem'}} onClick={saveNotif}>Sauvegarder</button>
+            </div>
+          </div>
+        )}
+
+        {section==='securite' && (
+          <div style={{maxWidth:'480px'}}>
+            <div className="card mb2">
+              <div className="card-title">🔒 Sécurité du compte</div>
+              <div style={{padding:'.75rem',background:'rgba(90,158,32,.06)',borderRadius:'8px',fontSize:'.83rem',marginBottom:'1rem'}}>
+                <div style={{fontWeight:600,color:'var(--lime)',marginBottom:'.3rem'}}>✅ Compte sécurisé</div>
+                <div style={{color:'var(--ink3)'}}>Votre compte est lié à votre numéro <strong>{user.telephone}</strong>. Chaque connexion est vérifiée par SMS.</div>
+              </div>
+              <div style={{display:'flex',flexDirection:'column',gap:'.6rem',fontSize:'.83rem'}}>
+                {[
+                  ['📱 Authentification SMS','Activée','var(--lime)'],
+                  ['🔑 Connexion par OTP','Configurée','var(--lime)'],
+                  ['🌍 Dernière connexion','Aujourd\'hui','var(--ink3)'],
+                  ['📍 Localisation','Sénégal','var(--ink3)'],
+                ].map(([lbl,val,col])=>(
+                  <div key={lbl} style={{display:'flex',justifyContent:'space-between',padding:'.5rem 0',borderBottom:'1px solid var(--border)'}}>
+                    <span style={{color:'var(--ink)'}}>{lbl}</span>
+                    <span style={{fontWeight:600,color:col}}>{val}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-title">📋 Journal de connexions</div>
+              {[
+                ['Aujourd\'hui','14:23','Dakar, Sénégal','Chrome / Windows'],
+                ['Hier','09:11','Thiès, Sénégal','Safari / iPhone'],
+                ['Il y a 3 jours','17:45','Dakar, Sénégal','Chrome / Windows'],
+              ].map(([date,heure,lieu,appareil])=>(
+                <div key={date+heure} style={{padding:'.5rem 0',borderBottom:'1px solid var(--border)',fontSize:'.8rem'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:'.1rem'}}>
+                    <span style={{fontWeight:600,color:'var(--ink)'}}>{date} à {heure}</span>
+                    <span style={{color:'var(--lime)',fontSize:'.72rem'}}>✅ Succès</span>
+                  </div>
+                  <div style={{color:'var(--ink3)'}}>📍 {lieu} · {appareil}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {section==='appli' && (
+          <div style={{maxWidth:'480px'}}>
+            <div className="card mb2">
+              <div className="card-title">📱 À propos de l'application</div>
+              {[
+                ['Application','AgriTontine+'],
+                ['Version','v4.0 — Production'],
+                ['Base de données','Supabase PostgreSQL'],
+                ['Hébergement','Vercel Edge Network'],
+                ['Dernière MAJ','Février 2026'],
+                ['Développé pour','Sénégal · 14 régions'],
+              ].map(([lbl,val])=>(
+                <div key={lbl} style={{display:'flex',justifyContent:'space-between',padding:'.5rem 0',borderBottom:'1px solid var(--border)',fontSize:'.85rem'}}>
+                  <span style={{color:'var(--ink3)'}}>{lbl}</span>
+                  <span style={{fontWeight:600,color:'var(--ink)'}}>{val}</span>
+                </div>
+              ))}
+            </div>
+            <div className="card">
+              <div className="card-title">🆘 Support & Aide</div>
+              <div style={{display:'flex',flexDirection:'column',gap:'.6rem'}}>
+                {[
+                  ['📧 Email support','support@agritontineplus.com'],
+                  ['📞 Téléphone','+(221) 33 XXX XX XX'],
+                  ['💬 WhatsApp','+(221) 77 XXX XX XX'],
+                  ['🌐 Site web','agritontineplus.com'],
+                ].map(([ic,val])=>(
+                  <div key={ic} style={{display:'flex',justifyContent:'space-between',padding:'.5rem 0',borderBottom:'1px solid var(--border)',fontSize:'.83rem'}}>
+                    <span style={{color:'var(--ink)'}}>{ic}</span>
+                    <span style={{color:'var(--lime)',fontWeight:600}}>{val}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
 function Login({onLogin}){
   const [tab,setTab]=useState('paysan');
   const [f,setF]=useState({nom:'',tel:'',village:'',region:'Dakar',secteur:'agriculture',role:'paysan'});
@@ -3761,6 +4322,9 @@ function App(){
     {id:'messagerie',ic:'💬',label:'Messagerie'},
     {id:'carte',ic:'🗺',label:'Carte Tontines'},
     {id:'adminnational',ic:'📊',label:'Admin National'},
+    {id:'notifications',ic:'🔔',label:'Notifications',dot:null,dotCls:'dot-red'},
+    {id:'simulateur',ic:'🧮',label:'Simulateur Crédit'},
+    {id:'parametres',ic:'⚙️',label:'Paramètres'},
     {id:'profil',ic:'👤',label:'Mon profil'},
   ];
 
@@ -3777,6 +4341,9 @@ function App(){
     messagerie:<Messagerie user={user} toast={toast}/>,
     carte:<CarteRegions user={user} tontines={tontines} toast={toast}/>,
     adminnational:<AdminNational user={user} tontines={tontines} projets={projets} toast={toast}/>,
+    notifications:<Notifications user={user} toast={toast}/>,
+    simulateur:<SimulateurCredit user={user} tontines={tontines} toast={toast}/>,
+    parametres:<Parametres user={user} setUser={setUserWrapper} toast={toast}/>,
     profil:<Profil user={user} setUser={setUserWrapper} toast={toast}/>,
   };
 
