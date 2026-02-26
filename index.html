@@ -505,6 +505,82 @@ const PARTENAIRES = ['DER Sénégal','FADA','PAM CAS','ANCAR','PRACAS','Crédit 
 const ESPECES = ['Bovins','Ovins','Caprins','Porcins','Volaille','Équidés','Camelins'];
 const CULTURES = ['Arachide','Mil','Maïs','Sorgho','Riz','Niébé','Coton','Tomate','Oignon','Manioc','Pastèque','Bissap'];
 
+/* ── MARCHÉ CADRAN — Constantes ── */
+const CATEGORIES_MARCHE = [
+  {id:'cereales',   label:'Céréales',    ic:'🌾', cls:'sec-agri'},
+  {id:'legumes',    label:'Légumes',     ic:'🥦', cls:'sec-mix'},
+  {id:'fruits',     label:'Fruits',      ic:'🍊', cls:'sec-mix'},
+  {id:'betail',     label:'Bétail',      ic:'🐄', cls:'sec-elev'},
+  {id:'volaille',   label:'Volaille',    ic:'🐓', cls:'sec-elev'},
+  {id:'intrants',   label:'Intrants',    ic:'🧪', cls:'ch-gray'},
+  {id:'equipement', label:'Équipement',  ic:'🚜', cls:'ch-gray'},
+  {id:'autre',      label:'Autre',       ic:'📦', cls:'ch-gray'},
+];
+const UNITES = ['kg','tonne','sac (50kg)','sac (100kg)','litre','unité','tête','lot'];
+
+/* ── MARCHÉ CADRAN — Supabase CRUD ── */
+async function sbFetchAnnonces(filters) {
+  filters = filters || {};
+  let q = sb.from('annonces')
+    .select('*, vendeur:users(id,nom,telephone,village,region)')
+    .eq('statut','active')
+    .order('created_at',{ascending:false});
+  if (filters.categorie && filters.categorie!=='all') q = q.eq('categorie',filters.categorie);
+  if (filters.region && filters.region!=='all') q = q.eq('region',filters.region);
+  if (filters.type && filters.type!=='all') q = q.eq('type',filters.type);
+  const {data} = await q;
+  return data || [];
+}
+
+async function sbCreerAnnonce(userId, f) {
+  const {data, error} = await sb.from('annonces').insert({
+    vendeur_id: userId,
+    type: f.type,
+    categorie: f.categorie,
+    produit: f.produit,
+    description: f.description || '',
+    quantite: parseFloat(f.quantite),
+    unite: f.unite,
+    prix_unitaire: parseInt(f.prix),
+    region: f.region,
+    village: f.village || '',
+    contact_wave: f.wave || '',
+    statut: 'active',
+    vues: 0,
+  }).select('*, vendeur:users(id,nom,telephone,village,region)').single();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+async function sbFaireOffre(annonceId, userId, montant, message) {
+  const {data, error} = await sb.from('offres').insert({
+    annonce_id: annonceId,
+    acheteur_id: userId,
+    montant: parseInt(montant),
+    message: message || '',
+    statut: 'en_attente',
+  }).select('*, acheteur:users(id,nom,telephone,village,region)').single();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+async function sbFetchOffres(annonceId) {
+  const {data} = await sb.from('offres')
+    .select('*, acheteur:users(id,nom,telephone,village,region)')
+    .eq('annonce_id',annonceId)
+    .order('created_at',{ascending:false});
+  return data || [];
+}
+
+async function sbAccepterOffre(offreId, annonceId) {
+  await sb.from('offres').update({statut:'acceptee'}).eq('id',offreId);
+  await sb.from('annonces').update({statut:'vendue'}).eq('id',annonceId);
+}
+
+async function sbIncrVues(annonceId) {
+  await sb.rpc('increment_vues', {aid: annonceId});
+}
+
 /* Projets d'investissement initiaux */
 const PROJETS_INIT = [
   {
@@ -1713,6 +1789,519 @@ function Profil({user,setUser,toast}){
 /* ══════════════════════════════════════════════════════
    LOGIN — avec Supabase
 ══════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════
+   MARCHÉ CADRAN
+══════════════════════════════════════════════════════ */
+function Marche({user, toast}) {
+  const [annonces, setAnnonces] = React.useState([]);
+  const [offres, setOffres] = React.useState({});
+  const [loading, setLoading] = React.useState(true);
+  const [modal, setModal] = React.useState(null); // 'creer' | 'detail' | 'offre' | 'prix'
+  const [selAnnonce, setSelAnnonce] = React.useState(null);
+  const [filterCat, setFilterCat] = React.useState('all');
+  const [filterReg, setFilterReg] = React.useState('all');
+  const [filterType, setFilterType] = React.useState('all');
+  const [searchQ, setSearchQ] = React.useState('');
+  const [onglet, setOnglet] = React.useState('marche'); // marche | mesannonces | prix
+
+  // Formulaire nouvelle annonce
+  const [f, setF] = React.useState({
+    type:'vente', categorie:'cereales', produit:'', description:'',
+    quantite:'', unite:'kg', prix:'', region: user.region || 'Dakar',
+    village: user.village || '', wave: user.telephone || '',
+  });
+
+  // Formulaire offre
+  const [fOffre, setFOffre] = React.useState({montant:'', message:''});
+
+  // Chargement annonces
+  React.useEffect(()=>{
+    load();
+    // Realtime nouveaux produits
+    const ch = sb.channel('rt_annonces')
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'annonces'},
+        async ()=>{ const a = await sbFetchAnnonces(); setAnnonces(a); toast('🛒 Nouveau produit sur le marché !','i'); })
+      .subscribe();
+    return ()=>sb.removeChannel(ch);
+  },[]);
+
+  const load = async () => {
+    setLoading(true);
+    const a = await sbFetchAnnonces();
+    setAnnonces(a);
+    setLoading(false);
+  };
+
+  const reload = async (filters) => {
+    setLoading(true);
+    const a = await sbFetchAnnonces(filters||{categorie:filterCat,region:filterReg,type:filterType});
+    setAnnonces(a);
+    setLoading(false);
+  };
+
+  // Publier une annonce
+  const publier = async (e) => {
+    e.preventDefault();
+    if (!f.produit||!f.quantite||!f.prix) { toast('Remplissez tous les champs obligatoires','e'); return; }
+    try {
+      const a = await sbCreerAnnonce(user.id, f);
+      setAnnonces(prev=>[a,...prev]);
+      setModal(null);
+      setF({type:'vente',categorie:'cereales',produit:'',description:'',quantite:'',unite:'kg',prix:'',region:user.region,village:user.village,wave:user.telephone});
+      toast('✅ Annonce publiée !');
+    } catch(e) { toast('Erreur : '+e.message,'e'); }
+  };
+
+  // Voir détail + charger offres
+  const voirDetail = async (annonce) => {
+    setSelAnnonce(annonce);
+    setModal('detail');
+    const o = await sbFetchOffres(annonce.id);
+    setOffres(prev=>({...prev,[annonce.id]:o}));
+  };
+
+  // Faire une offre
+  const soumettreOffre = async (e) => {
+    e.preventDefault();
+    if (!fOffre.montant) { toast('Indiquez votre prix','e'); return; }
+    try {
+      const o = await sbFaireOffre(selAnnonce.id, user.id, fOffre.montant, fOffre.message);
+      setOffres(prev=>({...prev,[selAnnonce.id]:[o,...(prev[selAnnonce.id]||[])]}));
+      setFOffre({montant:'',message:''});
+      setModal('detail');
+      toast('✅ Offre envoyée ! Le vendeur sera notifié.');
+    } catch(e) { toast('Erreur : '+e.message,'e'); }
+  };
+
+  // Accepter une offre
+  const accepterOffre = async (offre) => {
+    try {
+      await sbAccepterOffre(offre.id, selAnnonce.id);
+      setAnnonces(prev=>prev.map(a=>a.id===selAnnonce.id?{...a,statut:'vendue'}:a));
+      setModal(null);
+      toast('✅ Offre acceptée ! Contactez l\'acheteur via Wave.');
+    } catch(e) { toast('Erreur : '+e.message,'e'); }
+  };
+
+  // Générer lien Wave
+  const waveLink = (tel, montant, produit) => {
+    const num = tel.replace(/\D/g,'');
+    return `https://pay.wave.com/m/${num}?amount=${montant}&note=${encodeURIComponent('AgriTontine+ : '+produit)}`;
+  };
+
+  // Prix du marché — agrégation locale
+  const prixParProduit = React.useMemo(()=>{
+    const map = {};
+    annonces.filter(a=>a.type==='vente').forEach(a=>{
+      if (!map[a.produit]) map[a.produit] = {produit:a.produit,categorie:a.categorie,prix:[],regions:new Set()};
+      map[a.produit].prix.push(a.prix_unitaire);
+      map[a.produit].regions.add(a.region);
+    });
+    return Object.values(map).map(p=>({
+      ...p,
+      prixMin: Math.min(...p.prix),
+      prixMax: Math.max(...p.prix),
+      prixMoy: Math.round(p.prix.reduce((a,b)=>a+b,0)/p.prix.length),
+      nbOffres: p.prix.length,
+      regions: [...p.regions],
+    })).sort((a,b)=>b.nbOffres-a.nbOffres);
+  },[annonces]);
+
+  // Filtrage local
+  const annoncesFiltrees = React.useMemo(()=>{
+    let r = annonces;
+    if (filterCat!=='all') r=r.filter(a=>a.categorie===filterCat);
+    if (filterReg!=='all') r=r.filter(a=>a.region===filterReg);
+    if (filterType!=='all') r=r.filter(a=>a.type===filterType);
+    if (searchQ) r=r.filter(a=>a.produit.toLowerCase().includes(searchQ.toLowerCase())||a.description.toLowerCase().includes(searchQ.toLowerCase()));
+    return r;
+  },[annonces,filterCat,filterReg,filterType,searchQ]);
+
+  const mesAnnonces = annonces.filter(a=>a.vendeur_id===user.id);
+
+  const catInfo = (id) => CATEGORIES_MARCHE.find(c=>c.id===id)||{ic:'📦',label:id,cls:'ch-gray'};
+  const prix = (n) => n ? n.toLocaleString('fr-FR')+' FCFA' : '—';
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-tag">Marché Cadran</div>
+        <div className="ph-title">🛒 AgriTontine+ Market</div>
+        <div className="ph-sub">Achetez et vendez vos produits agricoles · Paiement Wave sécurisé</div>
+      </div>
+
+      {/* ONGLETS */}
+      <div style={{padding:'0 1.25rem',display:'flex',gap:'.5rem',marginBottom:'1rem',borderBottom:'1px solid var(--border)'}}>
+        {[['marche','🛒 Marché'],['mesannonces','📋 Mes annonces'],['prix','📊 Prix du marché']].map(([id,lbl])=>(
+          <div key={id} onClick={()=>setOnglet(id)} style={{
+            padding:'.5rem 1rem',cursor:'pointer',fontWeight:onglet===id?700:400,
+            color:onglet===id?'var(--lime)':'var(--ink3)',
+            borderBottom:onglet===id?'2px solid var(--lime)':'2px solid transparent',
+            fontSize:'.85rem',whiteSpace:'nowrap',
+          }}>{lbl}</div>
+        ))}
+      </div>
+
+      <div className="content">
+
+        {/* ═══ ONGLET MARCHÉ ═══ */}
+        {onglet==='marche' && <>
+          {/* Filtres + Recherche */}
+          <div style={{display:'flex',gap:'.5rem',flexWrap:'wrap',marginBottom:'1rem',alignItems:'center'}}>
+            <input
+              placeholder="🔍 Rechercher un produit..."
+              value={searchQ} onChange={e=>setSearchQ(e.target.value)}
+              style={{flex:'1',minWidth:'160px',padding:'.5rem .75rem',borderRadius:'8px',border:'1px solid var(--border)',background:'var(--card)',color:'var(--ink)',fontSize:'.85rem'}}
+            />
+            <select value={filterType} onChange={e=>setFilterType(e.target.value)} style={{padding:'.5rem',borderRadius:'8px',border:'1px solid var(--border)',background:'var(--card)',color:'var(--ink)',fontSize:'.82rem'}}>
+              <option value="all">Vente + Achat</option>
+              <option value="vente">🟢 Ventes</option>
+              <option value="achat">🔵 Demandes achat</option>
+            </select>
+            <select value={filterCat} onChange={e=>setFilterCat(e.target.value)} style={{padding:'.5rem',borderRadius:'8px',border:'1px solid var(--border)',background:'var(--card)',color:'var(--ink)',fontSize:'.82rem'}}>
+              <option value="all">Toutes catégories</option>
+              {CATEGORIES_MARCHE.map(c=><option key={c.id} value={c.id}>{c.ic} {c.label}</option>)}
+            </select>
+            <select value={filterReg} onChange={e=>setFilterReg(e.target.value)} style={{padding:'.5rem',borderRadius:'8px',border:'1px solid var(--border)',background:'var(--card)',color:'var(--ink)',fontSize:'.82rem'}}>
+              <option value="all">Toutes régions</option>
+              {REGIONS.map(r=><option key={r}>{r}</option>)}
+            </select>
+            <button className="btn btn-lime btn-sm" onClick={()=>setModal('creer')}>+ Publier annonce</button>
+          </div>
+
+          {/* Stats rapides */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'.75rem',marginBottom:'1.25rem'}}>
+            {[
+              ['🛒',annoncesFiltrees.filter(a=>a.type==='vente').length,'Ventes actives'],
+              ['🔵',annoncesFiltrees.filter(a=>a.type==='achat').length,'Demandes achat'],
+              ['📍',new Set(annoncesFiltrees.map(a=>a.region)).size,'Régions actives'],
+            ].map(([ic,val,lbl])=>(
+              <div key={lbl} className="card" style={{padding:'.75rem',textAlign:'center'}}>
+                <div style={{fontSize:'1.4rem'}}>{ic}</div>
+                <div style={{fontWeight:700,fontSize:'1.3rem',color:'var(--lime)'}}>{val}</div>
+                <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>{lbl}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Liste annonces */}
+          {loading ? <div className="t-muted t-sm" style={{textAlign:'center',padding:'2rem'}}>⏳ Chargement...</div>
+          : annoncesFiltrees.length===0 ? (
+            <div className="card" style={{textAlign:'center',padding:'2rem',color:'var(--ink3)'}}>
+              <div style={{fontSize:'2rem',marginBottom:'.5rem'}}>🛒</div>
+              <div style={{fontWeight:600,marginBottom:'.25rem'}}>Aucune annonce</div>
+              <div style={{fontSize:'.82rem'}}>Soyez le premier à publier !</div>
+              <button className="btn btn-lime btn-sm" style={{marginTop:'1rem'}} onClick={()=>setModal('creer')}>+ Publier une annonce</button>
+            </div>
+          ) : (
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:'1rem'}}>
+              {annoncesFiltrees.map(a=>{
+                const cat = catInfo(a.categorie);
+                const isVente = a.type==='vente';
+                const isMine = a.vendeur_id===user.id;
+                return (
+                  <div key={a.id} className="card" style={{cursor:'pointer',transition:'.15s',border:`1px solid ${isVente?'rgba(90,158,32,.25)':'rgba(21,101,192,.25)'}`}}
+                    onClick={()=>voirDetail(a)}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'.5rem'}}>
+                      <span className={`chip ${cat.cls}`} style={{fontSize:'.68rem'}}>{cat.ic} {cat.label}</span>
+                      <span style={{fontSize:'.72rem',fontWeight:700,padding:'.2rem .5rem',borderRadius:'99px',
+                        background:isVente?'rgba(90,158,32,.12)':'rgba(21,101,192,.12)',
+                        color:isVente?'var(--lime)':'var(--blue2,#42a5f5)'}}>
+                        {isVente?'🟢 VENTE':'🔵 ACHAT'}
+                      </span>
+                    </div>
+                    <div style={{fontWeight:700,fontSize:'1rem',color:'var(--ink)',marginBottom:'.25rem'}}>{a.produit}</div>
+                    <div style={{fontSize:'1.3rem',fontWeight:900,color:'var(--lime)',marginBottom:'.25rem'}}>
+                      {prix(a.prix_unitaire)} <span style={{fontSize:'.75rem',fontWeight:400,color:'var(--ink3)'}}>/ {a.unite}</span>
+                    </div>
+                    <div style={{fontSize:'.8rem',color:'var(--ink3)',marginBottom:'.5rem'}}>
+                      📦 {a.quantite} {a.unite} · 📍 {a.village||''} {a.region}
+                    </div>
+                    {a.description&&<div style={{fontSize:'.78rem',color:'var(--ink4)',marginBottom:'.5rem',fontStyle:'italic'}}>{a.description}</div>}
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:'.5rem',paddingTop:'.5rem',borderTop:'1px solid var(--border)'}}>
+                      <span style={{fontSize:'.75rem',color:'var(--ink3)'}}>👤 {a.vendeur?.nom||'—'}</span>
+                      {isMine
+                        ? <span style={{fontSize:'.72rem',color:'var(--gold2)',fontWeight:600}}>📋 Mon annonce</span>
+                        : <span style={{fontSize:'.75rem',color:'var(--teal2)',fontWeight:600}}>Faire une offre →</span>
+                      }
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>}
+
+        {/* ═══ ONGLET MES ANNONCES ═══ */}
+        {onglet==='mesannonces' && <>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1rem'}}>
+            <div style={{fontWeight:700,color:'var(--ink)'}}>Mes annonces ({mesAnnonces.length})</div>
+            <button className="btn btn-lime btn-sm" onClick={()=>setModal('creer')}>+ Nouvelle annonce</button>
+          </div>
+          {mesAnnonces.length===0 ? (
+            <div className="card" style={{textAlign:'center',padding:'2rem',color:'var(--ink3)'}}>
+              <div style={{fontSize:'2rem',marginBottom:'.5rem'}}>📋</div>
+              <div>Vous n'avez pas encore d'annonce</div>
+              <button className="btn btn-lime btn-sm" style={{marginTop:'1rem'}} onClick={()=>setModal('creer')}>Publier ma première annonce</button>
+            </div>
+          ) : mesAnnonces.map(a=>{
+            const cat = catInfo(a.categorie);
+            const offresAnnonce = offres[a.id]||[];
+            return (
+              <div key={a.id} className="card mb2" onClick={()=>voirDetail(a)} style={{cursor:'pointer'}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'.5rem'}}>
+                  <div style={{fontWeight:700}}>{cat.ic} {a.produit}</div>
+                  <span style={{fontSize:'.72rem',padding:'.2rem .6rem',borderRadius:'99px',fontWeight:700,
+                    background:a.statut==='active'?'rgba(90,158,32,.15)':a.statut==='vendue'?'rgba(196,154,40,.15)':'rgba(196,74,42,.15)',
+                    color:a.statut==='active'?'var(--lime)':a.statut==='vendue'?'var(--gold2)':'var(--rust2)'}}>
+                    {a.statut==='active'?'✅ Active':a.statut==='vendue'?'🤝 Vendue':'❌ Clôturée'}
+                  </span>
+                </div>
+                <div style={{display:'flex',gap:'1.5rem',fontSize:'.82rem',color:'var(--ink3)'}}>
+                  <span>💰 {prix(a.prix_unitaire)}/{a.unite}</span>
+                  <span>📦 {a.quantite} {a.unite}</span>
+                  <span>📍 {a.region}</span>
+                  <span>👁 {a.vues||0} vues</span>
+                </div>
+                {offresAnnonce.length>0&&(
+                  <div style={{marginTop:'.5rem',padding:'.4rem .75rem',background:'rgba(196,154,40,.1)',borderRadius:'8px',fontSize:'.8rem',color:'var(--gold2)',fontWeight:600}}>
+                    💬 {offresAnnonce.length} offre(s) reçue(s) — Cliquez pour voir
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </>}
+
+        {/* ═══ ONGLET PRIX DU MARCHÉ ═══ */}
+        {onglet==='prix' && <>
+          <div style={{fontWeight:700,color:'var(--ink)',marginBottom:'1rem'}}>
+            📊 Prix du marché en temps réel — {prixParProduit.length} produits
+          </div>
+          {prixParProduit.length===0 ? (
+            <div className="card" style={{textAlign:'center',padding:'2rem',color:'var(--ink3)'}}>
+              Aucune donnée de prix disponible — publiez des annonces de vente
+            </div>
+          ) : (
+            <div style={{overflowX:'auto'}}>
+              <table style={{width:'100%',borderCollapse:'collapse',fontSize:'.83rem'}}>
+                <thead>
+                  <tr style={{background:'var(--card2,#f8f9f8)',borderBottom:'2px solid var(--border)'}}>
+                    {['Produit','Catégorie','Prix min','Prix moyen','Prix max','Offres','Régions'].map(h=>(
+                      <th key={h} style={{padding:'.6rem .75rem',textAlign:'left',color:'var(--ink3)',fontWeight:600,fontSize:'.78rem'}}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {prixParProduit.map((p,i)=>{
+                    const cat = catInfo(p.categorie);
+                    return (
+                      <tr key={p.produit} style={{borderBottom:'1px solid var(--border)',background:i%2===0?'transparent':'rgba(0,0,0,.02)'}}>
+                        <td style={{padding:'.6rem .75rem',fontWeight:600,color:'var(--ink)'}}>{p.produit}</td>
+                        <td style={{padding:'.6rem .75rem'}}><span className={`chip ${cat.cls}`} style={{fontSize:'.65rem'}}>{cat.ic} {cat.label}</span></td>
+                        <td style={{padding:'.6rem .75rem',color:'var(--lime)',fontWeight:700}}>{prix(p.prixMin)}</td>
+                        <td style={{padding:'.6rem .75rem',color:'var(--gold2)',fontWeight:700}}>{prix(p.prixMoy)}</td>
+                        <td style={{padding:'.6rem .75rem',color:'var(--rust2)',fontWeight:700}}>{prix(p.prixMax)}</td>
+                        <td style={{padding:'.6rem .75rem',textAlign:'center'}}><span className="chip ch-gray" style={{fontSize:'.7rem'}}>{p.nbOffres}</span></td>
+                        <td style={{padding:'.6rem .75rem',fontSize:'.75rem',color:'var(--ink3)'}}>{p.regions.slice(0,3).join(', ')}{p.regions.length>3?'...':''}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>}
+
+      </div>{/* end content */}
+
+      {/* ═══ MODAL CRÉER ANNONCE ═══ */}
+      {modal==='creer' && (
+        <div className="modal-overlay" onClick={()=>setModal(null)}>
+          <div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'520px'}}>
+            <div className="modal-title">📢 Publier une annonce</div>
+            <form onSubmit={publier}>
+              {/* Type */}
+              <div style={{display:'flex',gap:'.5rem',marginBottom:'1rem'}}>
+                {[['vente','🟢 Je vends'],['achat','🔵 Je cherche à acheter']].map(([val,lbl])=>(
+                  <div key={val} onClick={()=>setF(p=>({...p,type:val}))}
+                    style={{flex:1,padding:'.6rem',borderRadius:'8px',cursor:'pointer',textAlign:'center',
+                      fontWeight:f.type===val?700:400,fontSize:'.83rem',
+                      background:f.type===val?(val==='vente'?'rgba(90,158,32,.15)':'rgba(21,101,192,.15)'):'var(--card2,#f5f5f5)',
+                      border:`1px solid ${f.type===val?(val==='vente'?'var(--lime)':'#42a5f5'):'var(--border)'}`,
+                      color:f.type===val?(val==='vente'?'var(--lime)':'#42a5f5'):'var(--ink3)'}}>
+                    {lbl}
+                  </div>
+                ))}
+              </div>
+              {/* Catégorie */}
+              <div style={{display:'flex',gap:'.4rem',flexWrap:'wrap',marginBottom:'1rem'}}>
+                {CATEGORIES_MARCHE.map(c=>(
+                  <div key={c.id} onClick={()=>setF(p=>({...p,categorie:c.id}))}
+                    className={`chip ${f.categorie===c.id?c.cls:'ch-gray'}`}
+                    style={{cursor:'pointer',fontSize:'.75rem',opacity:f.categorie===c.id?1:.6}}>
+                    {c.ic} {c.label}
+                  </div>
+                ))}
+              </div>
+              <div className="fg"><label>Produit *</label><input required value={f.produit} onChange={e=>setF(p=>({...p,produit:e.target.value}))} placeholder="Ex: Arachide coque, Mil souna, Bovin Zébu..."/></div>
+              <div className="fg"><label>Description</label><input value={f.description} onChange={e=>setF(p=>({...p,description:e.target.value}))} placeholder="Qualité, récolte, âge (bétail)..."/></div>
+              <div className="fr">
+                <div className="fg"><label>Quantité *</label><input required type="number" min="0.1" step="0.1" value={f.quantite} onChange={e=>setF(p=>({...p,quantite:e.target.value}))} placeholder="Ex: 500"/></div>
+                <div className="fg"><label>Unité</label>
+                  <select value={f.unite} onChange={e=>setF(p=>({...p,unite:e.target.value}))}>
+                    {UNITES.map(u=><option key={u}>{u}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="fg"><label>Prix unitaire (FCFA) *</label><input required type="number" min="1" value={f.prix} onChange={e=>setF(p=>({...p,prix:e.target.value}))} placeholder="Ex: 350 FCFA/kg"/></div>
+              <div className="fr">
+                <div className="fg"><label>Région</label>
+                  <select value={f.region} onChange={e=>setF(p=>({...p,region:e.target.value}))}>
+                    {REGIONS.map(r=><option key={r}>{r}</option>)}
+                  </select>
+                </div>
+                <div className="fg"><label>Village</label><input value={f.village} onChange={e=>setF(p=>({...p,village:e.target.value}))} placeholder="Ex: Touba Toul"/></div>
+              </div>
+              <div className="fg">
+                <label>Numéro Wave pour paiement *</label>
+                <input required value={f.wave} onChange={e=>setF(p=>({...p,wave:e.target.value}))} placeholder="+221 7X XXX XX XX"/>
+                <div style={{fontSize:'.72rem',color:'var(--ink3)',marginTop:'.2rem'}}>Les acheteurs vous paieront directement via Wave sur ce numéro</div>
+              </div>
+              <div className="frow-btns">
+                <button type="button" className="btn btn-ghost" onClick={()=>setModal(null)}>Annuler</button>
+                <button type="submit" className="btn btn-lime">Publier l'annonce</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ MODAL DÉTAIL ANNONCE ═══ */}
+      {modal==='detail' && selAnnonce && (()=>{
+        const cat = catInfo(selAnnonce.categorie);
+        const isMine = selAnnonce.vendeur_id === user.id;
+        const offresAnnonce = offres[selAnnonce.id]||[];
+        const total = selAnnonce.quantite * selAnnonce.prix_unitaire;
+        const wLink = waveLink(selAnnonce.contact_wave||selAnnonce.vendeur?.telephone||'', total, selAnnonce.produit);
+        return (
+          <div className="modal-overlay" onClick={()=>setModal(null)}>
+            <div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'560px'}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'1rem'}}>
+                <div>
+                  <span className={`chip ${cat.cls}`} style={{fontSize:'.72rem',marginBottom:'.4rem',display:'inline-flex'}}>{cat.ic} {cat.label}</span>
+                  <div style={{fontWeight:800,fontSize:'1.2rem',color:'var(--ink)'}}>{selAnnonce.produit}</div>
+                </div>
+                <span style={{fontSize:'.75rem',fontWeight:700,padding:'.3rem .7rem',borderRadius:'99px',
+                  background:selAnnonce.type==='vente'?'rgba(90,158,32,.12)':'rgba(21,101,192,.12)',
+                  color:selAnnonce.type==='vente'?'var(--lime)':'#42a5f5'}}>
+                  {selAnnonce.type==='vente'?'🟢 VENTE':'🔵 ACHAT'}
+                </span>
+              </div>
+
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.75rem',marginBottom:'1rem'}}>
+                <div style={{background:'rgba(90,158,32,.08)',padding:'.75rem',borderRadius:'10px'}}>
+                  <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>Prix unitaire</div>
+                  <div style={{fontWeight:800,fontSize:'1.3rem',color:'var(--lime)'}}>{prix(selAnnonce.prix_unitaire)}</div>
+                  <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>par {selAnnonce.unite}</div>
+                </div>
+                <div style={{background:'rgba(196,154,40,.08)',padding:'.75rem',borderRadius:'10px'}}>
+                  <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>Quantité disponible</div>
+                  <div style={{fontWeight:800,fontSize:'1.3rem',color:'var(--gold2)'}}>{selAnnonce.quantite}</div>
+                  <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>{selAnnonce.unite}</div>
+                </div>
+              </div>
+
+              {selAnnonce.description&&<div style={{marginBottom:'1rem',padding:'.75rem',background:'var(--card2,#f5f5f5)',borderRadius:'8px',fontSize:'.83rem',color:'var(--ink3)'}}>{selAnnonce.description}</div>}
+
+              <div style={{display:'flex',gap:'1rem',fontSize:'.82rem',color:'var(--ink3)',marginBottom:'1rem',flexWrap:'wrap'}}>
+                <span>👤 {selAnnonce.vendeur?.nom||'—'}</span>
+                <span>📍 {selAnnonce.village||''} {selAnnonce.region}</span>
+                <span>📞 {selAnnonce.vendeur?.telephone||'—'}</span>
+              </div>
+
+              {/* Actions */}
+              {!isMine && selAnnonce.statut==='active' && (
+                <div style={{display:'flex',gap:'.75rem',marginBottom:'1rem',flexWrap:'wrap'}}>
+                  {/* Payer via Wave */}
+                  <a href={wLink} target="_blank" rel="noopener noreferrer"
+                    style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:'.4rem',
+                      padding:'.7rem 1rem',borderRadius:'10px',background:'rgba(21,101,192,.1)',
+                      color:'#42a5f5',fontWeight:700,fontSize:'.85rem',textDecoration:'none',
+                      border:'1px solid rgba(21,101,192,.2)'}}>
+                    💙 Payer via Wave<br/><span style={{fontSize:'.72rem',fontWeight:400}}>{prix(total)} total</span>
+                  </a>
+                  {/* Faire une offre */}
+                  <button className="btn btn-lime" style={{flex:1}} onClick={()=>setModal('offre')}>
+                    💬 Faire une offre
+                  </button>
+                </div>
+              )}
+
+              {/* Offres reçues (si vendeur) */}
+              {isMine && offresAnnonce.length>0 && (
+                <div style={{marginBottom:'1rem'}}>
+                  <div style={{fontWeight:600,marginBottom:'.5rem',color:'var(--ink)'}}>💬 Offres reçues ({offresAnnonce.length})</div>
+                  {offresAnnonce.map(o=>(
+                    <div key={o.id} style={{padding:'.75rem',borderRadius:'8px',background:'var(--card2,#f5f5f5)',marginBottom:'.5rem',border:'1px solid var(--border)'}}>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'.25rem'}}>
+                        <span style={{fontWeight:600,fontSize:'.85rem'}}>👤 {o.acheteur?.nom||'—'}</span>
+                        <span style={{fontWeight:700,color:'var(--lime)',fontSize:'.9rem'}}>{prix(o.montant)}</span>
+                      </div>
+                      {o.message&&<div style={{fontSize:'.78rem',color:'var(--ink3)',marginBottom:'.4rem'}}>{o.message}</div>}
+                      <div style={{display:'flex',gap:'.5rem',alignItems:'center'}}>
+                        <span style={{fontSize:'.72rem',color:'var(--ink3)'}}>{o.acheteur?.telephone}</span>
+                        {o.statut==='en_attente' && (
+                          <button className="btn btn-lime btn-sm" onClick={()=>accepterOffre(o)}>
+                            ✅ Accepter
+                          </button>
+                        )}
+                        {o.statut==='acceptee' && <span style={{fontSize:'.75rem',color:'var(--lime)',fontWeight:700}}>✅ Acceptée</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button className="btn btn-ghost w100" onClick={()=>setModal(null)}>Fermer</button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ═══ MODAL FAIRE UNE OFFRE ═══ */}
+      {modal==='offre' && selAnnonce && (
+        <div className="modal-overlay" onClick={()=>setModal('detail')}>
+          <div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'420px'}}>
+            <div className="modal-title">💬 Faire une offre — {selAnnonce.produit}</div>
+            <div style={{padding:'.6rem .75rem',background:'rgba(90,158,32,.08)',borderRadius:'8px',marginBottom:'1rem',fontSize:'.82rem',color:'var(--ink3)'}}>
+              Prix demandé : <strong style={{color:'var(--lime)'}}>{prix(selAnnonce.prix_unitaire)}/{selAnnonce.unite}</strong>
+            </div>
+            <form onSubmit={soumettreOffre}>
+              <div className="fg">
+                <label>Votre prix offert (FCFA/{selAnnonce.unite}) *</label>
+                <input required type="number" min="1" value={fOffre.montant} onChange={e=>setFOffre(p=>({...p,montant:e.target.value}))} placeholder={selAnnonce.prix_unitaire}/>
+              </div>
+              <div className="fg">
+                <label>Message au vendeur</label>
+                <input value={fOffre.message} onChange={e=>setFOffre(p=>({...p,message:e.target.value}))} placeholder="Ex: Prise en charge du transport, quantité souhaitée..."/>
+              </div>
+              <div style={{fontSize:'.75rem',color:'var(--ink3)',marginBottom:'.75rem',padding:'.5rem',background:'rgba(196,154,40,.08)',borderRadius:'8px'}}>
+                💙 Si le vendeur accepte, vous le payez directement via Wave sur son numéro <strong>{selAnnonce.contact_wave||selAnnonce.vendeur?.telephone}</strong>
+              </div>
+              <div className="frow-btns">
+                <button type="button" className="btn btn-ghost" onClick={()=>setModal('detail')}>Retour</button>
+                <button type="submit" className="btn btn-lime">Envoyer l'offre</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Login({onLogin}){
   const [tab,setTab]=useState('paysan');
   const [f,setF]=useState({nom:'',tel:'',village:'',region:'Dakar',secteur:'agriculture',role:'paysan'});
@@ -2015,6 +2604,7 @@ function App(){
     {id:'credits',ic:'🌱',label:'Crédits intrants',dot:score<40?'!':null,dotCls:'dot-gold'},
     {id:'investissement',ic:'💼',label:'Investissement',dot:openInvests>0?openInvests:null,dotCls:'dot-green'},
     ...(isAdm?[{id:'admin',ic:'👑',label:'Administration'}]:[]),
+    {id:'marche',ic:'🛒',label:'Marché Cadran'},
     {id:'profil',ic:'👤',label:'Mon profil'},
   ];
 
@@ -2025,6 +2615,7 @@ function App(){
     credits:<Credits user={user} setUser={setUserWrapper} toast={toast}/>,
     investissement:<Investissement user={user} setUser={setUserWrapper} projets={projets} setProjets={setProjetsWrapper} toast={toast}/>,
     admin:<Admin user={user} tontines={tontines} setTontines={setTontinesWrapper} toast={toast}/>,
+    marche:<Marche user={user} toast={toast}/>,
     profil:<Profil user={user} setUser={setUserWrapper} toast={toast}/>,
   };
 
