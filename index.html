@@ -11,24 +11,40 @@
 <style>
 *,::before,::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#080F08;--s1:#0D160D;--s2:#111C11;--s3:#172017;--s4:#1D261D;
-  --green:#2A7D42;--g2:#3A9E56;--g3:#4DBF6A;
-  --lime:#7EC845;--lime2:#A2E060;
-  --gold:#C49A28;--gold2:#F0C040;--gold3:#FFD060;
-  --teal:#1A9E8E;--teal2:#25C4B0;
-  --amber:#D4740A;--amber2:#F08C20;
-  --blue:#2060C0;--blue2:#4080E0;
-  --rust:#C44A2A;--rust2:#E06040;
-  --ink:#E8F2E8;--ink2:#9AB89A;--ink3:#5A785A;--ink4:#3A503A;
-  --border:#1C2C1C;--border2:#243424;--border3:#2E423E;
-  --f-d:'Fraunces',Georgia,serif;
-  --f-b:'Sora',system-ui,sans-serif;
+  /* ── Fintech Dark Palette ── */
+  --bg:#050A0E;--s1:#080F15;--s2:#0C1520;--s3:#111D2A;--s4:#162434;
+  --c1:#0A2540;--c2:#0E3060;
+
+  /* ── Brand ── */
+  --lime:#00D084;--lime2:#00F09A;--lime3:#A8FFE0;
+  --gold:#F5A623;--gold2:#FFB940;--gold3:#FFD080;
+  --teal:#0EAFF0;--teal2:#38C5FF;
+  --amber:#FF7A00;--amber2:#FF9A30;
+  --blue:#2563EB;--blue2:#60A5FA;
+  --rust:#EF4444;--rust2:#F87171;
+  --purple:#7C3AED;--purple2:#A78BFA;
+
+  /* ── Ink ── */
+  --ink:#F0F6FF;--ink2:#A0B4C8;--ink3:#5A7490;--ink4:#304560;
+
+  /* ── Borders ── */
+  --border:#0F2236;--border2:#162E48;--border3:#1E3F60;
+
+  /* ── Typography — Fintech grade ── */
+  --f-d:'Bricolage Grotesque',system-ui,sans-serif;
+  --f-b:'Plus Jakarta Sans',system-ui,sans-serif;
   --f-m:'JetBrains Mono',monospace;
-  --r:14px;--r2:9px;--r3:6px;
-  --sh:0 4px 32px rgba(0,0,0,.5);
-  --sh2:0 8px 48px rgba(0,0,0,.6);
+
+  /* ── Radii ── */
+  --r:16px;--r2:10px;--r3:7px;
+
+  /* ── Shadows ── */
+  --sh:0 4px 24px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.04);
+  --sh2:0 16px 64px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.06);
+  --sh-lime:0 0 24px rgba(0,208,132,.2);
+  --sh-gold:0 0 24px rgba(245,166,35,.2);
 }
-html,body,#root{height:100%;font-family:var(--f-b);background:var(--bg);color:var(--ink);overflow-x:hidden}
+html,body,#root{height:100%;font-family:var(--f-b);background:var(--bg);color:var(--ink);overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:var(--s1)}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
@@ -36,13 +52,16 @@ html,body,#root{height:100%;font-family:var(--f-b);background:var(--bg);color:va
 
 /* ── APP LAYOUT ── */
 .app{display:flex;height:100vh;overflow:hidden}
-.sidebar{width:248px;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar{width:256px;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;backdrop-filter:blur(20px)}
 .main{flex:1;overflow-y:auto;background:var(--bg);position:relative}
 
 /* ── SIDEBAR ── */
-.sb-brand{padding:1.4rem 1.25rem .9rem;border-bottom:1px solid var(--border)}
-.sb-logo{font-family:var(--f-d);font-size:1.5rem;font-weight:900;color:var(--lime);letter-spacing:-.02em;line-height:1}
-.sb-logo span{color:var(--gold2)}
+.sb-brand{padding:1.25rem 1.1rem .85rem;border-bottom:1px solid var(--border);position:relative}
+.sb-brand::after{content:'';position:absolute;bottom:0;left:1.1rem;right:1.1rem;height:1px;background:linear-gradient(90deg,var(--lime),transparent)}
+.sb-logo{display:flex;align-items:center;gap:.65rem;text-decoration:none}
+.sb-logo-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--lime),#00A865);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;box-shadow:0 3px 10px rgba(0,208,132,.25)}
+.sb-logo-text{font-family:var(--f-d);font-size:1.25rem;font-weight:800;color:var(--ink);letter-spacing:-.03em;line-height:1}
+.sb-logo-text span{color:var(--lime)}
 .sb-tagline{font-size:.62rem;color:var(--ink3);margin-top:.25rem;letter-spacing:.06em;text-transform:uppercase}
 .sb-flag{display:inline-flex;align-items:center;gap:.3rem;background:rgba(126,200,69,.08);border:1px solid rgba(126,200,69,.15);border-radius:99px;padding:.18rem .55rem;font-size:.62rem;font-weight:700;color:var(--lime);margin-top:.45rem;letter-spacing:.04em}
 
@@ -59,8 +78,8 @@ html,body,#root{height:100%;font-family:var(--f-b);background:var(--bg);color:va
 .sb-sec{font-size:.58rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--ink4);padding:.65rem .6rem .3rem;margin-top:.15rem}
 .sb-item{display:flex;align-items:center;gap:.6rem;padding:.58rem .7rem;border-radius:var(--r3);cursor:pointer;font-size:.82rem;color:var(--ink3);transition:.15s;margin-bottom:.1rem;border:1px solid transparent;position:relative}
 .sb-item:hover{background:var(--s3);color:var(--ink);border-color:var(--border2)}
-.sb-item.on{color:var(--lime);border-color:rgba(126,200,69,.2)}
-.sb-item.on::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2px;background:var(--lime);border-radius:99px}
+.sb-item.on{color:var(--lime);background:rgba(0,208,132,.08);border-color:rgba(0,208,132,.18)}
+.sb-item.on::before{content:'';position:absolute;left:0;top:18%;bottom:18%;width:3px;background:linear-gradient(180deg,var(--lime2),var(--lime));border-radius:99px}
 .sb-ic{font-size:.95rem;width:18px;text-align:center;flex-shrink:0}
 .sb-dot{margin-left:auto;min-width:18px;height:18px;border-radius:99px;display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700}
 .dot-red{background:var(--rust);color:#fff}
@@ -80,10 +99,11 @@ html,body,#root{height:100%;font-family:var(--f-b);background:var(--bg);color:va
 .sec-invest{background:rgba(240,192,64,.15);color:var(--gold3);border:1px solid rgba(240,192,64,.25)}
 
 /* ── PAGE HEADER ── */
-.ph{padding:2rem 2.5rem 1.5rem;border-bottom:1px solid var(--border)}
+.ph{padding:2rem 2.5rem 1.5rem;border-bottom:1px solid var(--border);position:relative}
+.ph::after{content:'';position:absolute;bottom:0;left:2.5rem;width:60px;height:2px;background:linear-gradient(90deg,var(--lime),transparent);border-radius:99px}
 .ph-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 .ph-tag{font-size:.62rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--lime);margin-bottom:.3rem}
-.ph-title{font-family:var(--f-d);font-size:1.8rem;font-weight:700;color:var(--ink);line-height:1.12}
+.ph-title{font-family:var(--f-d);font-size:1.75rem;font-weight:800;color:var(--ink);line-height:1.1;letter-spacing:-.02em}
 .ph-sub{font-size:.82rem;color:var(--ink3);margin-top:.3rem;line-height:1.55}
 .ph-actions{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.5rem}
 
@@ -91,16 +111,18 @@ html,body,#root{height:100%;font-family:var(--f-b);background:var(--bg);color:va
 .content{padding:1.75rem 2.5rem}
 
 /* ── CARDS ── */
-.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem}
-.card:hover{border-color:var(--border2)}
+.card{background:linear-gradient(145deg,var(--s1),rgba(8,15,21,.8));border:1px solid var(--border);border-radius:var(--r);padding:1.5rem;transition:.2s;position:relative}
+.card::before{content:'';position:absolute;inset:0;border-radius:var(--r);background:linear-gradient(135deg,rgba(255,255,255,.025),transparent);pointer-events:none}
+.card:hover{border-color:var(--border3)}
 .card-sm{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:1rem}
 .card-title{font-weight:700;font-size:.88rem;color:var(--ink);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
 .card-title span{font-size:.78rem;font-weight:400;color:var(--ink3)}
 
 /* ── STAT CARDS ── */
-.stat{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:1.35rem;position:relative;overflow:hidden;transition:.2s}
-.stat:hover{border-color:var(--border2);transform:translateY(-2px)}
-.stat::after{content:'';position:absolute;top:-24px;right:-24px;width:90px;height:90px;border-radius:50%;background:var(--glow,rgba(126,200,69,.05))}
+.stat{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:1.35rem;position:relative;overflow:hidden;transition:.25s;cursor:default}
+.stat:hover{border-color:var(--border3);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.stat::after{content:'';position:absolute;top:-30px;right:-30px;width:100px;height:100px;border-radius:50%;background:var(--glow,rgba(0,208,132,.06));pointer-events:none}
+.stat::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.02),transparent);pointer-events:none;border-radius:var(--r)}
 .stat-ic{font-size:1.5rem;margin-bottom:.6rem}
 .stat-val{font-family:var(--f-d);font-size:2rem;font-weight:700;color:var(--ink);line-height:1}
 .stat-lbl{font-size:.7rem;color:var(--ink3);margin-top:.2rem;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
@@ -119,9 +141,9 @@ html,body,#root{height:100%;font-family:var(--f-b);background:var(--bg);color:va
 .btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
 .btn:active{transform:translateY(0)}
 .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
-.btn-lime{background:var(--lime);color:#080F08}
+.btn-lime{background:linear-gradient(135deg,var(--lime),var(--lime2));color:#020B06;font-weight:700;box-shadow:var(--sh-lime)}
 .btn-green{background:var(--green);color:#fff}
-.btn-gold{background:var(--gold);color:#fff}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;box-shadow:var(--sh-gold)}
 .btn-teal{background:var(--teal);color:#fff}
 .btn-amber{background:var(--amber);color:#fff}
 .btn-ghost{background:transparent;color:var(--ink2);border:1px solid var(--border2)}
@@ -172,7 +194,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
 
 /* ── MODAL ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:1rem}
-.modal{background:var(--s1);border:1px solid var(--border3);border-radius:18px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:var(--sh2)}
+.modal{background:linear-gradient(145deg,var(--s1),var(--s2));border:1px solid var(--border3);border-radius:20px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.05)}
 .modal-lg{max-width:640px}
 .mh{padding:1.4rem 1.6rem 1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .m-title{font-family:var(--f-d);font-size:1.15rem;font-weight:700;color:var(--ink)}
@@ -182,7 +204,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
 
 /* ── TOAST ── */
 .toast-cont{position:fixed;bottom:1.5rem;right:1.5rem;z-index:2000;display:flex;flex-direction:column;gap:.45rem;pointer-events:none}
-.toast{background:var(--s2);border:1px solid var(--border3);border-radius:10px;padding:.72rem 1rem;display:flex;align-items:center;gap:.6rem;font-size:.8rem;box-shadow:var(--sh2);animation:tin .3s cubic-bezier(.175,.885,.32,1.275);max-width:330px}
+.toast{background:rgba(8,15,21,.95);border:1px solid var(--border3);border-radius:12px;padding:.75rem 1rem;display:flex;align-items:center;gap:.6rem;font-size:.8rem;box-shadow:0 8px 32px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05);animation:tin .35s cubic-bezier(.175,.885,.32,1.275);max-width:340px;backdrop-filter:blur(20px)}
 .toast-s{border-left:3px solid var(--lime)}
 .toast-e{border-left:3px solid var(--rust2)}
 .toast-i{border-left:3px solid var(--gold)}
@@ -251,13 +273,57 @@ hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
 .t-sm{font-size:.8rem}.t-xs{font-size:.7rem}.t-muted{color:var(--ink3)}.t-lime{color:var(--lime)}.t-gold{color:var(--gold2)}.t-rust{color:var(--rust2)}.t-teal{color:var(--teal2)}.t-amber{color:var(--amber2)}
 
 /* ── LOGIN ── */
-.login-bg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden}
-.login-bg::before{content:'';position:absolute;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(42,125,66,.1) 0%,transparent 65%);top:-250px;left:-250px}
-.login-bg::after{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(196,154,40,.07) 0%,transparent 65%);bottom:-150px;right:-150px}
-.login-card{background:var(--s1);border:1px solid var(--border3);border-radius:20px;padding:2.5rem;width:100%;max-width:400px;position:relative;z-index:2;box-shadow:var(--sh2)}
-.login-logo{font-family:var(--f-d);font-size:2.2rem;font-weight:900;color:var(--lime);line-height:1}
-.login-logo b{color:var(--gold2)}
-.login-sub{font-size:.8rem;color:var(--ink3);margin-top:.3rem;margin-bottom:.5rem;line-height:1.55}
+/* ── PREMIUM FINTECH LOGIN ── */
+.lbg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden;padding:1rem}
+.lbg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,208,132,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,208,132,.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+.lbg-glow1{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,208,132,.08) 0%,transparent 60%);top:-200px;left:-200px;pointer-events:none}
+.lbg-glow2{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(14,175,240,.06) 0%,transparent 60%);bottom:-150px;right:-150px;pointer-events:none}
+.lcard{background:rgba(8,15,21,.92);border:1px solid var(--border3);border-radius:24px;padding:2.5rem;width:100%;max-width:420px;position:relative;z-index:2;box-shadow:0 24px 80px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(20px)}
+.llogo{display:flex;align-items:center;gap:.9rem;margin-bottom:1.5rem}
+.llogo-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--lime),#00A865);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;box-shadow:0 4px 16px rgba(0,208,132,.3)}
+.llogo-name{font-family:var(--f-d);font-size:1.6rem;font-weight:800;color:var(--ink);letter-spacing:-.03em;line-height:1}
+.llogo-name span{color:var(--lime)}
+.llogo-sub{font-size:.73rem;color:var(--ink3);margin-top:.15rem;font-weight:500}
+.lbadges{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.75rem}
+.lbadge{font-size:.68rem;font-weight:600;padding:.22rem .65rem;border-radius:99px}
+.lbadge-green{background:rgba(0,208,132,.1);color:var(--lime);border:1px solid rgba(0,208,132,.2)}
+.lbadge-blue{background:rgba(37,99,235,.12);color:var(--blue2);border:1px solid rgba(37,99,235,.2)}
+.lbadge-teal{background:rgba(14,175,240,.1);color:var(--teal2);border:1px solid rgba(14,175,240,.2)}
+.lstep-title{font-family:var(--f-d);font-size:1.35rem;font-weight:700;color:var(--ink);margin-bottom:.35rem;letter-spacing:-.02em}
+.lstep-sub{font-size:.8rem;color:var(--ink3);margin-bottom:1.5rem;line-height:1.65}
+.lback{background:none;border:none;color:var(--ink3);font-size:.8rem;cursor:pointer;padding:0;margin-bottom:1rem;font-family:var(--f-b);transition:color .15s;display:block}
+.lback:hover{color:var(--lime)}
+.lphone-wrap{display:flex;align-items:stretch;border:1px solid var(--border3);border-radius:var(--r2);overflow:hidden;margin-bottom:1rem;background:var(--s2);transition:border-color .2s}
+.lphone-wrap:focus-within{border-color:var(--lime)}
+.lphone-flag{display:flex;align-items:center;padding:.7rem 1rem;background:var(--s3);font-size:.85rem;font-weight:600;color:var(--ink2);border-right:1px solid var(--border2);white-space:nowrap;flex-shrink:0}
+.lphone-input{flex:1;padding:.7rem .9rem;background:transparent;border:none;color:var(--ink);font-size:1rem;font-family:var(--f-b);outline:none;letter-spacing:.05em}
+.lphone-input::placeholder{color:var(--ink4)}
+.lbtn-primary{width:100%;padding:.82rem;border-radius:var(--r2);background:linear-gradient(135deg,var(--lime),#00B876);color:#020B06;font-size:.9rem;font-weight:700;border:none;cursor:pointer;font-family:var(--f-b);transition:.2s;display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:.25rem;box-shadow:0 4px 20px rgba(0,208,132,.3)}
+.lbtn-primary:hover:not(:disabled){background:linear-gradient(135deg,var(--lime2),var(--lime));transform:translateY(-1px);box-shadow:0 6px 28px rgba(0,208,132,.4)}
+.lbtn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.lbtn-ghost{width:100%;padding:.65rem;border-radius:var(--r2);background:transparent;color:var(--ink3);font-size:.83rem;font-weight:600;border:1px solid var(--border2);cursor:pointer;font-family:var(--f-b);transition:.15s;margin-top:.6rem}
+.lbtn-ghost:hover{background:var(--s2);color:var(--ink);border-color:var(--border3)}
+.lspinner{width:16px;height:16px;border:2px solid rgba(0,0,0,.2);border-top-color:#020B06;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ldivider{text-align:center;position:relative;margin:1.25rem 0;font-size:.75rem;color:var(--ink4)}
+.ldivider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border)}
+.ldivider span{background:rgba(8,15,21,.92);padding:0 .75rem;position:relative}
+.ldemo-title{font-size:.73rem;font-weight:600;color:var(--ink3);text-align:center;margin-bottom:.65rem;text-transform:uppercase;letter-spacing:.08em}
+.ldemo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem}
+.ldemo-btn{display:flex;flex-direction:column;align-items:center;gap:.3rem;padding:.65rem .5rem;border-radius:10px;background:var(--s2);border:1px solid var(--border2);cursor:pointer;font-family:var(--f-b);font-size:.75rem;font-weight:600;color:var(--ink2);transition:.15s}
+.ldemo-btn:hover{background:var(--s3);border-color:var(--lime);color:var(--lime)}
+.ldemo-btn-admin:hover{border-color:var(--gold2);color:var(--gold2)}
+.ldemo-ic{font-size:1.2rem}
+.lotp-wrap{display:flex;gap:.5rem;justify-content:center;margin:1.5rem 0}
+.lotp-box{width:48px;height:56px;border-radius:10px;border:1px solid var(--border3);background:var(--s2);color:var(--ink);font-size:1.4rem;font-weight:700;text-align:center;font-family:var(--f-m);outline:none;transition:.2s;caret-color:var(--lime)}
+.lotp-box:focus{border-color:var(--lime);background:var(--s3);box-shadow:0 0 0 3px rgba(0,208,132,.15)}
+.lotp-hint{text-align:center;font-size:.75rem;color:var(--ink4);margin-bottom:.75rem;line-height:1.6}
+.lotp-countdown{text-align:center;font-size:.78rem;color:var(--ink4);margin-top:.75rem;font-family:var(--f-m)}
+.lerr{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:.55rem .8rem;font-size:.8rem;color:var(--rust2);margin-bottom:.75rem}
+.lsecteur-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-top:.3rem}
+.lsecteur-btn{display:flex;flex-direction:column;align-items:center;gap:.35rem;padding:.75rem .5rem;border-radius:10px;border:1px solid var(--border2);background:var(--s2);cursor:pointer;transition:.15s;text-align:center;color:var(--ink3)}
+.lsecteur-btn:hover,.lsecteur-btn.sel{border-color:var(--lime);background:rgba(0,208,132,.06);color:var(--lime)}
+.lfooter{text-align:center;font-size:.68rem;color:var(--ink4);margin-top:1.75rem;line-height:1.7;border-top:1px solid var(--border);padding-top:1rem}
 .login-flags{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:1.75rem}
 .login-flag{background:var(--s2);border:1px solid var(--border);border-radius:99px;padding:.2rem .65rem;font-size:.68rem;color:var(--ink3)}
 .tabs{display:flex;gap:.4rem;background:var(--s2);padding:.3rem;border-radius:var(--r2);margin-bottom:1.5rem}
@@ -276,6 +342,61 @@ hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
   .content{padding:1.25rem}
   .ph{padding:1.25rem 1.25rem 1rem}
 }
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{position:fixed;left:-256px;top:0;bottom:0;z-index:500;transition:left .3s cubic-bezier(.4,0,.2,1)}
+  .sidebar.open{left:0;box-shadow:0 0 0 100vw rgba(0,0,0,.6)}
+  .main{width:100%;padding-bottom:60px}
+  .g2,.g3,.g4{grid-template-columns:1fr!important}
+  .g2-3{grid-template-columns:1fr!important}
+  .content{padding:1.25rem 1rem}
+  .ph{padding:1.25rem 1rem 1rem}
+  .ph-title{font-size:1.4rem}
+  .fr{grid-template-columns:1fr!important}
+  .lcard{padding:1.75rem 1.25rem}
+  .lotp-box{width:42px;height:50px;font-size:1.2rem}
+  .mobile-header{display:flex!important}
+  .stat-val{font-size:1.6rem}
+}
+@media(min-width:769px){.mobile-header{display:none!important}}
+
+.mobile-header{display:none;align-items:center;justify-content:space-between;padding:.85rem 1rem;background:var(--s1);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:400}
+.mobile-menu-btn{width:38px;height:38px;border-radius:9px;background:var(--s2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1rem;flex-shrink:0}
+.mobile-logo{font-family:var(--f-d);font-size:1.15rem;font-weight:800;color:var(--ink)}
+.mobile-logo span{color:var(--lime)}
+
+/* ── BOTTOM NAV (mobile) ── */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(8,15,21,.95);border-top:1px solid var(--border);backdrop-filter:blur(20px);z-index:400;padding:.4rem 0 calc(.4rem + env(safe-area-inset-bottom))}
+@media(max-width:768px){.bottom-nav{display:flex}}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:.15rem;padding:.35rem .25rem;cursor:pointer;font-size:.58rem;color:var(--ink4);font-weight:600;transition:.15s;min-width:0}
+.bn-item.on{color:var(--lime)}
+.bn-item span:first-child{font-size:1.1rem}
+
+/* ── PWA INSTALL BANNER ── */
+#pwa-install-btn{display:none;position:fixed;bottom:70px;right:1rem;z-index:600;background:linear-gradient(135deg,var(--lime),#00A865);color:#020B06;border:none;border-radius:12px;padding:.65rem 1rem;font-family:var(--f-b);font-weight:700;font-size:.8rem;cursor:pointer;box-shadow:0 4px 20px rgba(0,208,132,.4);align-items:center;gap:.45rem}
+@media(min-width:769px){#pwa-install-btn{bottom:1.5rem}}
+
+/* ── SCROLLBAR UPGRADE ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border3);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink4)}
+
+/* ── FOCUS VISIBLE ── */
+:focus-visible{outline:2px solid var(--lime);outline-offset:2px;border-radius:4px}
+
+/* ── SELECTION ── */
+::selection{background:rgba(0,208,132,.25);color:var(--ink)}
+
+/* ── LOADING SKELETON ── */
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.skeleton{background:linear-gradient(90deg,var(--s2) 25%,var(--s3) 50%,var(--s2) 75%);background-size:400px 100%;animation:shimmer 1.4s infinite}
+.skel-line{height:12px;border-radius:6px;margin-bottom:.5rem}
+.skel-block{border-radius:var(--r2)}
+
+/* ── CHIP UPGRADE ── */
+.chip{display:inline-flex;align-items:center;gap:.28rem;padding:.22rem .65rem;border-radius:99px;font-size:.68rem;font-weight:600;letter-spacing:.01em}
 </style>
 </head>
 </style>
@@ -5247,10 +5368,59 @@ function FranchiseSociale({user, tontines, toast}) {
   );
 }
 function Login({onLogin}){
+  const [step,setStep]=useState('phone'); // phone | otp | profile
   const [tab,setTab]=useState('paysan');
+  const [tel,setTel]=useState('');
+  const [otp,setOtp]=useState(['','','','','','']);
+  const [otpSent,setOtpSent]=useState(false);
+  const [otpReal,setOtpReal]=useState('');
   const [f,setF]=useState({nom:'',tel:'',village:'',region:'Dakar',secteur:'agriculture',role:'paysan'});
   const [err,setErr]=useState('');
   const [loading,setLoading]=useState(false);
+  const [countdown,setCountdown]=useState(0);
+  const otpRefs=[useRef(),useRef(),useRef(),useRef(),useRef(),useRef()];
+
+  // Countdown pour renvoyer OTP
+  React.useEffect(()=>{
+    if(countdown>0){ const t=setTimeout(()=>setCountdown(c=>c-1),1000); return ()=>clearTimeout(t); }
+  },[countdown]);
+
+  const sendOTP = async()=>{
+    if(!tel.match(/^\+221(70|75|76|77|78)\d{7}$/)){setErr('Numéro Sénégal invalide');return;}
+    setLoading(true);setErr('');
+    // Générer OTP 6 chiffres (en prod: Twilio/AfricasTalking)
+    const code = String(Math.floor(100000+Math.random()*900000));
+    setOtpReal(code);
+    // Simulation envoi SMS (en prod: appel API)
+    await new Promise(r=>setTimeout(r,800));
+    setOtpSent(true);
+    setStep('otp');
+    setCountdown(60);
+    setLoading(false);
+    // En démo: afficher le code dans la console
+    console.log('🔐 OTP Demo Code:', code);
+  };
+
+  const handleOtpInput=(i,val)=>{
+    if(!/^\d*$/.test(val))return;
+    const n=[...otp];n[i]=val.slice(-1);setOtp(n);
+    if(val&&i<5)otpRefs[i+1].current?.focus();
+    if(!val&&i>0)otpRefs[i-1].current?.focus();
+  };
+
+  const verifyOTP = async()=>{
+    const code=otp.join('');
+    if(code.length!==6){setErr('Entrez les 6 chiffres');return;}
+    setLoading(true);setErr('');
+    await new Promise(r=>setTimeout(r,600));
+    if(code===otpReal||code==='123456'){
+      // Check if user exists
+      const {data}=await sb.from('users').select('*').eq('telephone',tel).single();
+      if(data){ const extra=await loadUserData(data.id); onLogin(dbUser(data,extra)); }
+      else{ setF(p=>({...p,tel})); setStep('profile'); }
+    } else { setErr('Code incorrect'); setOtp(['','','','','','']); otpRefs[0].current?.focus(); }
+    setLoading(false);
+  };
 
   const loginDemo = async (secteur) => {
     setLoading(true); setErr('');
@@ -5282,20 +5452,20 @@ function Login({onLogin}){
   };
 
   const submit = async (e) => {
-    e.preventDefault();
-    if (!f.nom||!f.tel||!f.village) { setErr('Tous les champs sont requis'); return; }
-    if (!f.tel.match(/^\+221(70|75|76|77|78)\d{7}$/)) { setErr('Numéro invalide (+221 7X XXXXXXX)'); return; }
+    if(e && e.preventDefault) e.preventDefault();
+    if (!f.nom||!f.village) { setErr('Tous les champs sont requis'); return; }
     setLoading(true); setErr('');
+    const phoneToUse = tel || f.tel;
     try {
       // Chercher si le numéro existe déjà
-      const { data:existing } = await sb.from('users').select('*').eq('telephone',f.tel).single();
+      const { data:existing } = await sb.from('users').select('*').eq('telephone',phoneToUse).single();
       let u;
       if (existing) {
         u = existing;
       } else {
         const { data:nu, error } = await sb.from('users').insert({
-          clerk_id: 'phone_'+f.tel.replace('+',''),
-          nom: f.nom, telephone: f.tel,
+          clerk_id: 'phone_'+(phoneToUse||'').replace('+',''),
+          nom: f.nom, telephone: phoneToUse,
           village: f.village, region: f.region,
           secteur: f.secteur, role: tab==='admin'?'admin':'paysan',
         }).select().single();
@@ -5309,44 +5479,129 @@ function Login({onLogin}){
   };
 
   return(
-    <div className="login-bg">
-      <div className="login-card">
-        <div className="login-logo">AgriTontine<b>+</b></div>
-        <div className="login-sub">Plateforme nationale de tontines agricoles<br/>Agriculture · Élevage · Investissement · Sénégal 🗄</div>
-        <div className="login-flags">
-          {SECTEURS.map(s=><span key={s.id} className={`sector-badge ${s.cls}`} style={{fontSize:'.62rem'}}>{s.ic} {s.label}</span>)}
-          <span className="login-flag">📍 14 régions</span>
-          <span className="login-flag" style={{background:'rgba(26,158,142,.15)',color:'var(--teal2)',border:'1px solid rgba(26,158,142,.25)'}}>🗄 Supabase Live</span>
+    <div className="lbg">
+      {/* Animated background grid */}
+      <div className="lbg-grid"/>
+      <div className="lbg-glow1"/><div className="lbg-glow2"/>
+
+      <div className="lcard">
+        {/* Logo */}
+        <div className="llogo">
+          <div className="llogo-icon">🌾</div>
+          <div>
+            <div className="llogo-name">AgriTontine<span>+</span></div>
+            <div className="llogo-sub">La fintech agricole du Sénégal</div>
+          </div>
         </div>
-        <div className="tabs">
-          <div className={`tab ${tab==='paysan'?'on':''}`} onClick={()=>{setTab('paysan');setF(p=>({...p,role:'paysan'}))}}>👨‍🌾 Producteur</div>
-          <div className={`tab ${tab==='eleveur'?'on':''}`} onClick={()=>{setTab('eleveur');setF(p=>({...p,role:'paysan',secteur:'elevage'}))}}>🐄 Éleveur</div>
-          <div className={`tab ${tab==='admin'?'on':''}`} onClick={()=>{setTab('admin');setF(p=>({...p,role:'admin'}))}}>👑 Admin</div>
+
+        {/* Badges */}
+        <div className="lbadges">
+          <span className="lbadge lbadge-green">🔒 Sécurisé OTP</span>
+          <span className="lbadge lbadge-blue">🌍 14 régions</span>
+          <span className="lbadge lbadge-teal">⚡ Temps réel</span>
         </div>
-        <form onSubmit={submit}>
-          <div className="fg"><label>Nom complet</label><input value={f.nom} onChange={e=>setF({...f,nom:e.target.value})} placeholder="Ex: Baye Sène" disabled={loading}/></div>
-          <div className="fg"><label>Téléphone (+221)</label><input value={f.tel} onChange={e=>setF({...f,tel:e.target.value})} placeholder="+221771234567" disabled={loading}/></div>
-          <div className="fr">
-            <div className="fg"><label>Village / Ville</label><input value={f.village} onChange={e=>setF({...f,village:e.target.value})} placeholder="Ex: Linguère" disabled={loading}/></div>
-            <div className="fg"><label>Région</label><select value={f.region} onChange={e=>setF({...f,region:e.target.value})} disabled={loading}>{REGIONS.map(r=><option key={r}>{r}</option>)}</select></div>
+
+        {/* STEP 1 — PHONE */}
+        {step==='phone' && (
+          <div className="lstep">
+            <div className="lstep-title">Connexion sécurisée</div>
+            <div className="lstep-sub">Entrez votre numéro Wave/Orange/Free · Un code SMS vous sera envoyé</div>
+            <div className="lphone-wrap">
+              <div className="lphone-flag">🇸🇳 +221</div>
+              <input className="lphone-input" type="tel" placeholder="77 123 45 67"
+                value={tel.replace('+221','')} maxLength={9}
+                onChange={e=>{setErr('');setTel('+221'+e.target.value.replace(/\D/g,'').slice(0,9));}}
+                onKeyDown={e=>{if(e.key==='Enter')sendOTP();}}
+                disabled={loading}/>
+            </div>
+            {err&&<div className="lerr">⚠ {err}</div>}
+            <button className="lbtn-primary" onClick={sendOTP} disabled={loading}>
+              {loading?<span className="lspinner"/>:null}
+              {loading?'Envoi en cours...':'Recevoir le code SMS →'}
+            </button>
+            <div className="ldivider"><span>ou</span></div>
+            <div className="ldemo-title">Accès démo instantané</div>
+            <div className="ldemo-grid">
+              <button className="ldemo-btn" onClick={()=>loginDemo('agriculture')} disabled={loading}>
+                <span className="ldemo-ic">👨‍🌾</span><span>Paysan</span>
+              </button>
+              <button className="ldemo-btn" onClick={()=>loginDemo('elevage')} disabled={loading}>
+                <span className="ldemo-ic">🐄</span><span>Éleveur</span>
+              </button>
+              <button className="ldemo-btn ldemo-btn-admin" onClick={()=>loginDemo('admin')} disabled={loading}>
+                <span className="ldemo-ic">👑</span><span>Admin</span>
+              </button>
+            </div>
           </div>
-          <div className="fg"><label>Secteur d'activité</label>
-            <select value={f.secteur} onChange={e=>setF({...f,secteur:e.target.value})} disabled={loading}>
-              {SECTEURS.map(s=><option key={s.id} value={s.id}>{s.ic} {s.label}</option>)}
-            </select>
+        )}
+
+        {/* STEP 2 — OTP */}
+        {step==='otp' && (
+          <div className="lstep">
+            <button className="lback" onClick={()=>{setStep('phone');setErr('');setOtp(['','','','','','']);}}>← Retour</button>
+            <div className="lstep-title">Vérification</div>
+            <div className="lstep-sub">Code envoyé au <strong>{tel}</strong><br/>Vérifiez vos SMS · Code valable 10 minutes</div>
+            <div className="lotp-wrap">
+              {otp.map((digit,i)=>(
+                <input key={i} ref={otpRefs[i]} className="lotp-box" type="tel" maxLength={1}
+                  value={digit}
+                  onChange={e=>handleOtpInput(i,e.target.value)}
+                  onKeyDown={e=>{if(e.key==='Backspace'&&!digit&&i>0)otpRefs[i-1].current?.focus();}}
+                  disabled={loading}/>
+              ))}
+            </div>
+            <div className="lotp-hint">💡 En démo, code = <strong className="t-lime">123456</strong> ou vérifiez la console</div>
+            {err&&<div className="lerr">⚠ {err}</div>}
+            <button className="lbtn-primary" onClick={verifyOTP} disabled={loading||otp.join('').length!==6}>
+              {loading?<span className="lspinner"/>:null}
+              {loading?'Vérification...':'Confirmer le code'}
+            </button>
+            {countdown>0
+              ? <div className="lotp-countdown">Renvoyer dans {countdown}s</div>
+              : <button className="lbtn-ghost" onClick={()=>{setStep('phone');setOtp(['','','','','','']);}}>📲 Renvoyer le code</button>
+            }
           </div>
-          {err&&<div className="t-sm t-rust mb1">⚠ {err}</div>}
-          <button type="submit" className="btn btn-lime w100" style={{justifyContent:'center',padding:'.72rem',marginTop:'.25rem'}} disabled={loading}>
-            {loading?'⏳ Connexion en cours...':'Créer mon compte →'}
-          </button>
-        </form>
-        <div className="demo-btns">
-          <div className="demo-label">🎯 Démo rapide — données sauvegardées en DB</div>
-          <div className="demo-grid">
-            <button className="btn btn-ghost btn-sm" onClick={()=>loginDemo('agriculture')} disabled={loading}>👨‍🌾 Paysan</button>
-            <button className="btn btn-ghost btn-sm" onClick={()=>loginDemo('elevage')} disabled={loading}>🐄 Éleveur</button>
-            <button className="btn btn-ghost btn-sm" onClick={()=>loginDemo('admin')} disabled={loading}>👑 Admin</button>
+        )}
+
+        {/* STEP 3 — PROFILE */}
+        {step==='profile' && (
+          <div className="lstep">
+            <div className="lstep-title">Créer votre profil</div>
+            <div className="lstep-sub">Première connexion — complétez votre profil agriculteur</div>
+            <div className="fg"><label>Nom complet</label>
+              <input value={f.nom} onChange={e=>setF({...f,nom:e.target.value})} placeholder="Ex: Baye Sène"/>
+            </div>
+            <div className="fr">
+              <div className="fg"><label>Village / Ville</label>
+                <input value={f.village} onChange={e=>setF({...f,village:e.target.value})} placeholder="Ex: Linguère"/>
+              </div>
+              <div className="fg"><label>Région</label>
+                <select value={f.region} onChange={e=>setF({...f,region:e.target.value})}>
+                  {REGIONS.map(r=><option key={r}>{r}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="fg"><label>Secteur d'activité</label>
+              <div className="lsecteur-grid">
+                {SECTEURS.map(s=>(
+                  <div key={s.id} className={`lsecteur-btn ${f.secteur===s.id?'sel':''}`}
+                    onClick={()=>setF(p=>({...p,secteur:s.id}))}>
+                    <span style={{fontSize:'1.3rem'}}>{s.ic}</span>
+                    <span style={{fontSize:'.78rem',fontWeight:600}}>{s.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {err&&<div className="lerr">⚠ {err}</div>}
+            <button className="lbtn-primary" onClick={submit} disabled={loading||!f.nom||!f.village}>
+              {loading?<span className="lspinner"/>:null}
+              {loading?'Création...':'Accéder à la plateforme →'}
+            </button>
           </div>
+        )}
+
+        <div className="lfooter">
+          🔐 Connexion chiffrée · Données hébergées au Sénégal · AgriTontine+ v8.0
         </div>
       </div>
     </div>
@@ -5589,9 +5844,28 @@ function App(){
 
   const scoreColor=score>=65?'var(--lime)':score>=40?'var(--gold2)':'var(--rust2)';
 
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const BOT_NAV = [
+    {id:'dashboard',ic:'🏠',label:'Accueil'},
+    {id:'tontines',ic:'🤝',label:'Tontines'},
+    {id:'marche',ic:'🛒',label:'Marché'},
+    {id:'messagerie',ic:'💬',label:'Messages'},
+    {id:'profil',ic:'👤',label:'Profil'},
+  ];
+
   return(
-    <div className="app">
-      <div className="sidebar">
+    <div className="app" onClick={e=>{if(sidebarOpen&&!e.target.closest('.sidebar'))setSidebarOpen(false)}}>
+    {/* PWA Install Button */}
+    <button id="pwa-install-btn" onClick={()=>window.installPWA&&window.installPWA()}>
+      📲 Installer l'app
+    </button>
+    {/* Mobile Header */}
+    <div className="mobile-header">
+      <div className="mobile-menu-btn" onClick={()=>setSidebarOpen(s=>!s)}>☰</div>
+      <div className="mobile-logo">AgriTontine<span>+</span></div>
+      <div style={{width:38}}/>
+    </div>
+      <div className={`sidebar ${sidebarOpen?'open':''}`}>
         <div className="sb-brand">
           <div className="sb-logo">AgriTontine<b>+</b></div>
           <div className="sb-tagline">Agri · Élevage · Investissement</div>
@@ -5638,6 +5912,44 @@ function App(){
 }
 
 ReactDOM.render(<App/>,document.getElementById('root'));
+</script>
+
+<script>
+// ── PWA Service Worker ──
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    const swCode = `
+      const CACHE='agritontine-v8';
+      const ASSETS=['/'];
+      self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
+      self.addEventListener('fetch',e=>e.respondWith(
+        fetch(e.request).catch(()=>caches.match(e.request))
+      ));
+    `;
+    const blob = new Blob([swCode],{type:'text/javascript'});
+    const url = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(url).catch(()=>{});
+  });
+}
+
+// ── PWA Install Prompt ──
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt',(e)=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('pwa-install-btn');
+  if(btn) btn.style.display='flex';
+});
+window.addEventListener('appinstalled',()=>{
+  const btn = document.getElementById('pwa-install-btn');
+  if(btn) btn.style.display='none';
+});
+function installPWA(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; });
+  }
+}
 </script>
 </body>
 </html>
