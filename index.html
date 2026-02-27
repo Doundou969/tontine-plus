@@ -4513,6 +4513,739 @@ function Parrainage({user, toast}) {
   );
 }
 
+
+/* ══════════════════════════════════════════════════════
+   RÉSEAU FRANCHISE SOCIALE — AgriTontine+ / Farm Shop Model
+══════════════════════════════════════════════════════ */
+
+/* ── Données statiques Franchise ── */
+const MODULES_FORMATION = [
+  {
+    id:'f1', titre:'Fondamentaux de la tontine', duree:'2h', niveau:'débutant',
+    ic:'🤝', description:'Fonctionnement des tontines, rôles, responsabilités, règles de base.',
+    chapitres:['Histoire des tontines au Sénégal','Rôles : président, trésorier, membres','Règles de cotisation','Gestion des conflits'],
+    badge:'Animateur Certifié Niveau 1', points:100,
+  },
+  {
+    id:'f2', titre:'Gestion financière agricole', duree:'3h', niveau:'débutant',
+    ic:'💰', description:'Comptabilité simplifiée, gestion de trésorerie, suivi des crédits.',
+    chapitres:['Tenue de livre de caisse','Calcul des intérêts','Suivi remboursements','Rapport mensuel'],
+    badge:'Gestionnaire Financier Certifié', points:150,
+  },
+  {
+    id:'f3', titre:'Marché et prix agricoles', duree:'2h30', niveau:'intermédiaire',
+    ic:'🛒', description:'Négociation, fixation des prix, accès aux marchés, chaîne de valeur.',
+    chapitres:['Lecture des prix du marché','Techniques de négociation','Vente groupée','Stockage et conservation'],
+    badge:'Expert Marché Cadran', points:120,
+  },
+  {
+    id:'f4', titre:'Crédit intrant et scoring IA', duree:'1h30', niveau:'intermédiaire',
+    ic:'🌱', description:'Comprendre le scoring, gérer un crédit intrant, optimiser son profil.',
+    chapitres:['Algorithme de scoring expliqué','Critères d\'éligibilité','Gestion du remboursement','Améliorer son score'],
+    badge:'Conseiller Crédit Certifié', points:120,
+  },
+  {
+    id:'f5', titre:'Agriculture numérique et app', duree:'1h', niveau:'débutant',
+    ic:'📱', description:'Utilisation d\'AgriTontine+, saisie des données, Marché Cadran.',
+    chapitres:['Navigation dans l\'app','Créer et gérer une tontine','Publier sur le Marché','Lire les rapports'],
+    badge:'Utilisateur Digital Certifié', points:80,
+  },
+  {
+    id:'f6', titre:'Leadership et animation communautaire', duree:'3h', niveau:'avancé',
+    ic:'👑', description:'Recrutement de membres, résolution de conflits, expansion du réseau.',
+    chapitres:['Techniques de recrutement','Médiation et arbitrage','Motivation des membres','Développer son réseau'],
+    badge:'Animateur Senior Certifié', points:200,
+  },
+  {
+    id:'f7', titre:'Agronomie pratique de base', duree:'4h', niveau:'avancé',
+    ic:'🌾', description:'Calendrier cultural, utilisation des intrants, lutte antiparasitaire.',
+    chapitres:['Calendrier des cultures Sénégal','Dosage des intrants','Reconnaissance ravageurs','Techniques de récolte'],
+    badge:'Conseiller Agricole de Terrain', points:200,
+  },
+  {
+    id:'f8', titre:'Franchise sociale — Devenir animateur', duree:'5h', niveau:'avancé',
+    ic:'🏢', description:'Modèle économique, responsabilités légales, KPIs d\'animateur, scale.',
+    chapitres:['Modèle Farm Shop adapté','Contrat d\'animateur AgriTontine+','Objectifs et KPIs','Plan d\'expansion régionale'],
+    badge:'Franchisé AgriTontine+ Officiel', points:300,
+  },
+];
+
+const NIVEAUX_ANIMATEUR = [
+  {id:'candidat',    label:'Candidat',         ic:'🌱', couleur:'var(--ink3)',   minPoints:0,   minTontines:0, minMembers:0,  avantage:'Accès formation'},
+  {id:'junior',      label:'Animateur Junior',  ic:'🌿', couleur:'var(--teal2)', minPoints:250, minTontines:1, minMembers:10, avantage:'Commission 2% cotisations'},
+  {id:'certifie',    label:'Animateur Certifié',ic:'⭐', couleur:'var(--gold2)', minPoints:500, minTontines:3, minMembers:30, avantage:'Commission 4% + bonus trimestriel'},
+  {id:'senior',      label:'Animateur Senior',  ic:'🏆', couleur:'var(--lime)',   minPoints:800, minTontines:6, minMembers:60, avantage:'Commission 6% + tontines illimitées'},
+  {id:'franchisé',   label:'Franchisé Officiel',ic:'🏢', couleur:'var(--amber2,#f59f00)', minPoints:1200, minTontines:10, minMembers:100, avantage:'Commission 8% + licence régionale'},
+];
+
+/* Supabase franchise functions */
+async function sbFetchAnimateurs() {
+  const {data} = await sb.from('animateurs')
+    .select('*, user:users(id,nom,telephone,village,region,secteur)')
+    .order('points',{ascending:false});
+  return data || [];
+}
+
+async function sbDevenirAnimateur(userId, motivation) {
+  const {data,error} = await sb.from('animateurs').insert({
+    user_id: userId,
+    motivation,
+    niveau: 'candidat',
+    points: 0,
+    modules_completes: [],
+    tontines_gerees: 0,
+    membres_recrutes: 0,
+    revenus_generes: 0,
+    statut: 'actif',
+  }).select().single();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+async function sbGetMonProfil(userId) {
+  const {data} = await sb.from('animateurs').select('*').eq('user_id',userId).single();
+  return data;
+}
+
+async function sbCompleterModule(animateurId, moduleId, points) {
+  const {data} = await sb.from('animateurs').select('modules_completes,points').eq('id',animateurId).single();
+  const modules = data?.modules_completes || [];
+  if (modules.includes(moduleId)) return;
+  const newPoints = (data?.points||0) + points;
+  await sb.from('animateurs').update({
+    modules_completes: [...modules, moduleId],
+    points: newPoints,
+  }).eq('id', animateurId);
+}
+
+/* ── Composant principal Franchise ── */
+function FranchiseSociale({user, tontines, toast}) {
+  const [onglet, setOnglet] = React.useState('apercu');
+  const [monProfil, setMonProfil] = React.useState(null);
+  const [animateurs, setAnimateurs] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [modaleModule, setModaleModule] = React.useState(null);
+  const [modaleInscription, setModaleInscription] = React.useState(false);
+  const [motivation, setMotivation] = React.useState('');
+  const [quizEnCours, setQuizEnCours] = React.useState(null);
+  const [quizScore, setQuizScore] = React.useState(null);
+  const [filterNiveau, setFilterNiveau] = React.useState('all');
+
+  React.useEffect(()=>{ load(); },[]);
+
+  const load = async () => {
+    setLoading(true);
+    const [profil, anim] = await Promise.all([sbGetMonProfil(user.id), sbFetchAnimateurs()]);
+    setMonProfil(profil);
+    setAnimateurs(anim);
+    setLoading(false);
+  };
+
+  const sInscrire = async () => {
+    if (!motivation.trim()) { toast('Expliquez votre motivation','e'); return; }
+    try {
+      const p = await sbDevenirAnimateur(user.id, motivation);
+      setMonProfil(p);
+      setModaleInscription(false);
+      toast('✅ Bienvenue dans le réseau AgriTontine+ !');
+    } catch(e) { toast('Erreur: '+e.message,'e'); }
+  };
+
+  const demarrerModule = (mod) => {
+    setModaleModule(mod);
+    setQuizEnCours(null);
+    setQuizScore(null);
+  };
+
+  const terminerModule = async (mod) => {
+    if (!monProfil) return;
+    // Simuler quiz — score aléatoire réaliste
+    const score = Math.floor(Math.random()*30)+70; // 70-100%
+    setQuizScore(score);
+    if (score >= 70) {
+      await sbCompleterModule(monProfil.id, mod.id, mod.points);
+      setMonProfil(p=>({...p,
+        modules_completes:[...(p.modules_completes||[]),mod.id],
+        points:(p.points||0)+mod.points,
+      }));
+      toast('🎓 Module terminé ! +'+mod.points+' points · Badge: '+mod.badge);
+    } else {
+      toast('Score insuffisant ('+score+'%). Réessayez !','e');
+    }
+  };
+
+  const mesTontines = tontines.filter(t=>t.membres.some(m=>m.uid===user.id));
+  const myPoints = monProfil?.points || 0;
+  const modulesCompletes = monProfil?.modules_completes || [];
+
+  const niveauActuel = [...NIVEAUX_ANIMATEUR].reverse().find(n=>myPoints>=n.minPoints) || NIVEAUX_ANIMATEUR[0];
+  const niveauSuivant = NIVEAUX_ANIMATEUR.find(n=>n.minPoints>myPoints);
+  const pctProg = niveauSuivant ? Math.round((myPoints-niveauActuel.minPoints)/(niveauSuivant.minPoints-niveauActuel.minPoints)*100) : 100;
+
+  // Stats réseau global
+  const statsReseau = {
+    totalAnimateurs: animateurs.length,
+    totalCertifies: animateurs.filter(a=>a.niveau!=='candidat').length,
+    totalMembers: animateurs.reduce((s,a)=>s+(a.membres_recrutes||0),0),
+    totalTontines: animateurs.reduce((s,a)=>s+(a.tontines_gerees||0),0),
+    revenusGeneres: animateurs.reduce((s,a)=>s+(a.revenus_generes||0),0),
+    parRegion: Object.entries(
+      animateurs.reduce((m,a)=>{ const r=a.user?.region||'?'; m[r]=(m[r]||0)+1; return m; },{})
+    ).sort((a,b)=>b[1]-a[1]).slice(0,6),
+  };
+
+  const animateursFiltres = filterNiveau==='all' ? animateurs : animateurs.filter(a=>a.niveau===filterNiveau);
+
+  const prix = (n) => (n||0).toLocaleString('fr-FR')+' FCFA';
+  const QUIZ_QUESTIONS = [
+    {q:'Quel est le rôle principal d\'un animateur AgriTontine+ ?',opts:['Gérer les finances de la plateforme','Recruter et accompagner les membres de tontines','Vendre des produits agricoles','Développer l\'application'],rep:1},
+    {q:'Combien de tontines faut-il pour devenir Animateur Certifié ?',opts:['1','2','3','5'],rep:2},
+    {q:'Quelle commission perçoit un Franchisé Officiel ?',opts:['2%','4%','6%','8%'],rep:3},
+    {q:'Le modèle Farm Shop vient de quel pays ?',opts:['Sénégal','Ghana','Kenya','Nigeria'],rep:2},
+    {q:'Quel est le minimum de membres pour passer Animateur Junior ?',opts:['5','10','20','30'],rep:1},
+  ];
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-tag">Franchise Sociale</div>
+        <div className="ph-title">🏢 Réseau AgriTontine+</div>
+        <div className="ph-sub">Modèle Farm Shop · Devenez animateur · Formez-vous · Scalez votre impact</div>
+      </div>
+
+      {/* ONGLETS */}
+      <div style={{padding:'0 1.25rem',display:'flex',gap:'.4rem',flexWrap:'wrap',marginBottom:'1rem',borderBottom:'1px solid var(--border)'}}>
+        {[
+          ['apercu','🏢 Aperçu'],
+          ['formation','🎓 Formation'],
+          ['monprofil','👤 Mon profil'],
+          ['reseau','🌍 Le Réseau'],
+          ['kpis','📊 KPIs Franchise'],
+        ].map(([id,lbl])=>(
+          <div key={id} onClick={()=>setOnglet(id)} style={{
+            padding:'.5rem .9rem',cursor:'pointer',fontWeight:onglet===id?700:400,
+            color:onglet===id?'var(--lime)':'var(--ink3)',
+            borderBottom:onglet===id?'2px solid var(--lime)':'2px solid transparent',
+            fontSize:'.83rem',whiteSpace:'nowrap',
+          }}>{lbl}</div>
+        ))}
+      </div>
+
+      <div className="content">
+
+        {/* ═══ APERÇU FRANCHISE ═══ */}
+        {onglet==='apercu' && (<>
+          {/* Bannière modèle */}
+          <div className="card mb2" style={{background:'linear-gradient(135deg,rgba(26,122,110,.12),rgba(90,158,32,.08))',border:'1px solid rgba(26,122,110,.25)'}}>
+            <div style={{display:'flex',gap:'1rem',alignItems:'flex-start',flexWrap:'wrap'}}>
+              <div style={{fontSize:'3rem'}}>🏢</div>
+              <div>
+                <div style={{fontWeight:800,fontSize:'1.2rem',color:'var(--ink)',marginBottom:'.4rem'}}>Modèle Franchise Sociale — inspiré de Farm Shop Kenya</div>
+                <div style={{fontSize:'.85rem',color:'var(--ink3)',lineHeight:1.7,marginBottom:'.75rem'}}>
+                  AgriTontine+ adopte le modèle de franchise sociale éprouvé au Kenya : un réseau d'animateurs certifiés qui recrutent, forment et accompagnent les agriculteurs dans leur région. Chaque animateur est un entrepreneur indépendant avec un territoire, une commission et un plan de croissance.
+                </div>
+                <div style={{display:'flex',gap:'.75rem',flexWrap:'wrap'}}>
+                  {!monProfil && <button className="btn btn-lime" onClick={()=>setModaleInscription(true)}>🌱 Devenir animateur →</button>}
+                  {monProfil && <div style={{padding:'.4rem .9rem',borderRadius:'99px',background:'rgba(90,158,32,.12)',color:'var(--lime)',fontWeight:700,fontSize:'.83rem'}}>✅ {niveauActuel.ic} {niveauActuel.label}</div>}
+                  <button className="btn btn-ghost btn-sm" onClick={()=>setOnglet('formation')}>📚 Voir les formations</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats réseau */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:'.75rem',marginBottom:'1.5rem'}}>
+            {[
+              ['🏢',statsReseau.totalAnimateurs,'Animateurs actifs','var(--lime)'],
+              ['⭐',statsReseau.totalCertifies,'Certifiés','var(--gold2)'],
+              ['👥',statsReseau.totalMembers,'Membres recrutés','var(--teal2)'],
+              ['🤝',statsReseau.totalTontines,'Tontines gérées','var(--lime)'],
+              ['💰',prix(statsReseau.revenusGeneres),'Revenus générés','var(--amber2,#f59f00)'],
+            ].map(([ic,val,lbl,col])=>(
+              <div key={lbl} className="card" style={{textAlign:'center',padding:'.75rem'}}>
+                <div style={{fontSize:'1.4rem'}}>{ic}</div>
+                <div style={{fontWeight:800,fontSize:'1rem',color:col,margin:'.2rem 0',lineHeight:1.2}}>{val}</div>
+                <div style={{fontSize:'.7rem',color:'var(--ink3)'}}>{lbl}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Comment ça marche */}
+          <div className="g2">
+            <div className="card">
+              <div className="card-title">🔄 Comment fonctionne la franchise</div>
+              {[
+                ['1','🌱 Candidature','Remplissez le formulaire et expliquez votre motivation'],
+                ['2','📚 Formation','Complétez les 8 modules de formation en ligne (16h)'],
+                ['3','🤝 1ère tontine','Créez et animez votre première tontine (min. 10 membres)'],
+                ['4','⭐ Certification','Obtenez votre badge Animateur Certifié après 3 tontines'],
+                ['5','💰 Commission','Recevez votre commission mensuelle sur chaque tontine gérée'],
+                ['6','🏢 Franchise','Gérez votre licence régionale avec 10+ tontines'],
+              ].map(({0:n,1:ic,2:desc})=>(
+                <div key={n} style={{display:'flex',gap:'.75rem',padding:'.6rem 0',borderBottom:'1px solid var(--border)',alignItems:'flex-start'}}>
+                  <div style={{width:'28px',height:'28px',borderRadius:'50%',background:'var(--lime)',color:'#fff',fontWeight:800,fontSize:'.85rem',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{n}</div>
+                  <div>
+                    <div style={{fontWeight:600,fontSize:'.88rem',color:'var(--ink)'}}>{ic} {desc.split('. ')[0]}</div>
+                    {desc.includes('. ') && <div style={{fontSize:'.75rem',color:'var(--ink3)',marginTop:'.1rem'}}>{desc.split('. ').slice(1).join('. ')}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div>
+              {/* Niveaux */}
+              <div className="card mb2">
+                <div className="card-title">🏆 Les 5 niveaux d'animateur</div>
+                {NIVEAUX_ANIMATEUR.map(n=>{
+                  const atteint = monProfil && myPoints>=n.minPoints;
+                  const estActuel = monProfil && niveauActuel.id===n.id;
+                  return (
+                    <div key={n.id} style={{display:'flex',justifyContent:'space-between',padding:'.55rem 0',borderBottom:'1px solid var(--border)',
+                      opacity:monProfil?(atteint?1:.45):1, fontWeight:estActuel?700:400}}>
+                      <div style={{display:'flex',gap:'.5rem',alignItems:'center'}}>
+                        <span style={{fontSize:'1.2rem'}}>{n.ic}</span>
+                        <div>
+                          <div style={{color:estActuel?n.couleur:'var(--ink)',fontSize:'.85rem'}}>{n.label} {estActuel&&'← vous'}</div>
+                          <div style={{fontSize:'.7rem',color:'var(--ink3)'}}>≥{n.minPoints}pts · {n.minTontines} tontines · {n.minMembers} membres</div>
+                        </div>
+                      </div>
+                      <div style={{textAlign:'right',fontSize:'.75rem',color:n.couleur,fontWeight:600}}>{n.avantage}</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Comparaison Farm Shop */}
+              <div className="card" style={{background:'rgba(26,122,110,.05)',border:'1px solid rgba(26,122,110,.2)'}}>
+                <div className="card-title" style={{color:'var(--teal2)'}}>🌍 Benchmark Farm Shop (Kenya)</div>
+                {[
+                  ['Boutiques actives','74','→','50+ tontines cible S1'],
+                  ['Agriculteurs servis','30 000','→','5 000 membres S1'],
+                  ['Femmes','50%','→','50% objectif'],
+                  ['Animateurs formés','74 gérants','→','28 animateurs (2/région)'],
+                  ['Taux remboursement crédit','92%','→','95% cible'],
+                ].map(([lbl,ks,arr,sn])=>(
+                  <div key={lbl} style={{display:'flex',gap:'.5rem',padding:'.35rem 0',borderBottom:'1px solid var(--border)',fontSize:'.78rem',alignItems:'center',flexWrap:'wrap'}}>
+                    <span style={{color:'var(--ink3)',flex:'1',minWidth:'120px'}}>{lbl}</span>
+                    <span style={{fontWeight:600,color:'var(--gold2)'}}>{ks}</span>
+                    <span style={{color:'var(--ink4)'}}>{arr}</span>
+                    <span style={{fontWeight:600,color:'var(--lime)'}}>{sn}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ FORMATION ═══ */}
+        {onglet==='formation' && (<>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1rem',flexWrap:'wrap',gap:'.5rem'}}>
+            <div style={{fontSize:'.83rem',color:'var(--ink3)'}}>
+              {modulesCompletes.length}/{MODULES_FORMATION.length} modules complétés ·
+              <strong style={{color:'var(--lime)'}}> {myPoints} points</strong>
+            </div>
+            {/* Barre globale */}
+            <div style={{flex:'1',maxWidth:'300px',height:'8px',background:'var(--border)',borderRadius:'99px',overflow:'hidden'}}>
+              <div style={{width:Math.round(modulesCompletes.length/MODULES_FORMATION.length*100)+'%',height:'100%',background:'var(--lime)',borderRadius:'99px',transition:'.5s'}}/>
+            </div>
+          </div>
+
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:'1rem'}}>
+            {MODULES_FORMATION.map(mod=>{
+              const fait = modulesCompletes.includes(mod.id);
+              const NIVEAU_COLORS = {'débutant':'ch-lime','intermédiaire':'ch-gold','avancé':'ch-rust'};
+              return (
+                <div key={mod.id} className="card" style={{border:fait?'1.5px solid var(--lime)':'1px solid var(--border)',cursor:'pointer',transition:'.15s'}}
+                  onClick={()=>demarrerModule(mod)}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'.6rem'}}>
+                    <div style={{fontSize:'2rem'}}>{mod.ic}</div>
+                    <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:'.3rem'}}>
+                      <span className={`chip ${NIVEAU_COLORS[mod.niveau]||'ch-gray'}`} style={{fontSize:'.68rem'}}>{mod.niveau}</span>
+                      {fait ? <span style={{fontSize:'.72rem',color:'var(--lime)',fontWeight:700}}>✅ Complété</span>
+                             : <span style={{fontSize:'.72rem',color:'var(--ink3)'}}>{mod.duree}</span>}
+                    </div>
+                  </div>
+                  <div style={{fontWeight:700,fontSize:'.95rem',color:'var(--ink)',marginBottom:'.3rem'}}>{mod.titre}</div>
+                  <div style={{fontSize:'.78rem',color:'var(--ink3)',marginBottom:'.6rem',lineHeight:1.5}}>{mod.description}</div>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <span style={{fontSize:'.75rem',color:'var(--gold2)',fontWeight:600}}>🏅 {mod.badge}</span>
+                    <span style={{fontSize:'.75rem',fontWeight:700,color:fait?'var(--lime)':'var(--ink3)'}}>+{mod.points} pts</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>)}
+
+        {/* ═══ MON PROFIL ANIMATEUR ═══ */}
+        {onglet==='monprofil' && (<>
+          {!monProfil ? (
+            <div className="card" style={{textAlign:'center',padding:'2rem'}}>
+              <div style={{fontSize:'3rem',marginBottom:'.75rem'}}>🌱</div>
+              <div style={{fontWeight:700,fontSize:'1.1rem',marginBottom:'.5rem'}}>Rejoignez le réseau AgriTontine+</div>
+              <div style={{fontSize:'.85rem',color:'var(--ink3)',marginBottom:'1.25rem',maxWidth:'400px',margin:'0 auto .75rem'}}>
+                Devenez animateur certifié, gérez des tontines dans votre région, gagnez une commission mensuelle et changez la vie des agriculteurs.
+              </div>
+              <button className="btn btn-lime" onClick={()=>setModaleInscription(true)}>🚀 Candidater maintenant</button>
+            </div>
+          ) : (
+            <div className="g2">
+              <div>
+                {/* Carte niveau */}
+                <div className="card mb2" style={{background:'linear-gradient(135deg,rgba(90,158,32,.1),rgba(26,122,110,.07))',border:`1.5px solid ${niveauActuel.couleur}`}}>
+                  <div style={{display:'flex',gap:'1rem',alignItems:'center',marginBottom:'1rem'}}>
+                    <div style={{fontSize:'2.5rem'}}>{niveauActuel.ic}</div>
+                    <div>
+                      <div style={{fontWeight:800,fontSize:'1.1rem',color:niveauActuel.couleur}}>{niveauActuel.label}</div>
+                      <div style={{fontSize:'.8rem',color:'var(--ink3)'}}>{user.nom} · {user.region}</div>
+                    </div>
+                    <div style={{marginLeft:'auto',textAlign:'right'}}>
+                      <div style={{fontWeight:900,fontSize:'1.6rem',color:'var(--lime)'}}>{myPoints}</div>
+                      <div style={{fontSize:'.7rem',color:'var(--ink3)'}}>points</div>
+                    </div>
+                  </div>
+                  {niveauSuivant&&(<>
+                    <div style={{height:'8px',background:'rgba(255,255,255,.3)',borderRadius:'99px',overflow:'hidden',marginBottom:'.4rem'}}>
+                      <div style={{width:pctProg+'%',height:'100%',background:'var(--lime)',borderRadius:'99px',transition:'.5s'}}/>
+                    </div>
+                    <div style={{fontSize:'.75rem',color:'var(--ink3)',display:'flex',justifyContent:'space-between'}}>
+                      <span>{niveauSuivant.minPoints-myPoints} pts pour {niveauSuivant.ic} {niveauSuivant.label}</span>
+                      <span>{pctProg}%</span>
+                    </div>
+                  </>)}
+                </div>
+
+                {/* Stats perso */}
+                <div className="card mb2">
+                  <div className="card-title">📊 Mes performances</div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.6rem'}}>
+                    {[
+                      ['🎓',modulesCompletes.length+'/'+MODULES_FORMATION.length,'Modules complétés','var(--lime)'],
+                      ['🤝',monProfil.tontines_gerees||0,'Tontines gérées','var(--gold2)'],
+                      ['👥',monProfil.membres_recrutes||0,'Membres recrutés','var(--teal2)'],
+                      ['💰',prix(monProfil.revenus_generes||0),'Revenus commissions','var(--lime)'],
+                    ].map(([ic,val,lbl,col])=>(
+                      <div key={lbl} style={{padding:'.65rem',background:'var(--card2,#f5f5f5)',borderRadius:'8px',textAlign:'center'}}>
+                        <div style={{fontSize:'1.2rem'}}>{ic}</div>
+                        <div style={{fontWeight:800,fontSize:'1rem',color:col,margin:'.15rem 0'}}>{val}</div>
+                        <div style={{fontSize:'.68rem',color:'var(--ink3)'}}>{lbl}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Avantage actuel */}
+                <div className="card" style={{background:'rgba(90,158,32,.06)',border:'1px solid rgba(90,158,32,.2)'}}>
+                  <div style={{fontWeight:700,color:'var(--lime)',marginBottom:'.4rem'}}>💰 Avantage actuel</div>
+                  <div style={{fontSize:'.87rem',color:'var(--ink)',fontWeight:600}}>{niveauActuel.avantage}</div>
+                  {niveauSuivant&&<div style={{fontSize:'.78rem',color:'var(--ink3)',marginTop:'.4rem'}}>Prochain niveau : {niveauSuivant.ic} {niveauSuivant.avantage}</div>}
+                </div>
+              </div>
+
+              {/* Badges obtenus */}
+              <div>
+                <div className="card mb2">
+                  <div className="card-title">🏅 Badges obtenus ({modulesCompletes.length})</div>
+                  {modulesCompletes.length===0 ? (
+                    <div style={{textAlign:'center',padding:'1rem',color:'var(--ink3)',fontSize:'.82rem'}}>
+                      Complétez des modules pour gagner vos badges
+                    </div>
+                  ) : MODULES_FORMATION.filter(m=>modulesCompletes.includes(m.id)).map(m=>(
+                    <div key={m.id} style={{display:'flex',gap:'.75rem',padding:'.6rem 0',borderBottom:'1px solid var(--border)',alignItems:'center'}}>
+                      <div style={{fontSize:'1.5rem'}}>{m.ic}</div>
+                      <div style={{flex:1}}>
+                        <div style={{fontWeight:600,fontSize:'.85rem',color:'var(--ink)'}}>{m.badge}</div>
+                        <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>{m.titre}</div>
+                      </div>
+                      <span style={{fontWeight:700,color:'var(--gold2)',fontSize:'.8rem'}}>+{m.points}pts</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Prochaines étapes */}
+                <div className="card">
+                  <div className="card-title">🎯 Prochaines étapes</div>
+                  {[
+                    modulesCompletes.length < MODULES_FORMATION.length && {
+                      ic:'📚', texte:'Complétez les modules restants',
+                      sous:MODULES_FORMATION.length-modulesCompletes.length+' module(s) restant(s)',
+                      action:()=>setOnglet('formation'),
+                    },
+                    niveauSuivant && {
+                      ic:niveauSuivant.ic, texte:'Atteignez '+niveauSuivant.label,
+                      sous:(niveauSuivant.minPoints-myPoints)+' points manquants',
+                      action:()=>setOnglet('formation'),
+                    },
+                    (monProfil.tontines_gerees||0)<3 && {
+                      ic:'🤝', texte:'Gérez 3 tontines',
+                      sous:(3-(monProfil.tontines_gerees||0))+' tontine(s) manquante(s)',
+                      action:()=>{},
+                    },
+                  ].filter(Boolean).map((e,i)=>(
+                    <div key={i} onClick={e.action} style={{display:'flex',gap:'.75rem',padding:'.6rem 0',borderBottom:'1px solid var(--border)',alignItems:'center',cursor:'pointer'}}>
+                      <span style={{fontSize:'1.3rem'}}>{e.ic}</span>
+                      <div>
+                        <div style={{fontWeight:600,fontSize:'.85rem',color:'var(--lime)'}}>{e.texte}</div>
+                        <div style={{fontSize:'.73rem',color:'var(--ink3)'}}>{e.sous}</div>
+                      </div>
+                      <span style={{marginLeft:'auto',color:'var(--ink4)'}}>→</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </>)}
+
+        {/* ═══ RÉSEAU ANIMATEURS ═══ */}
+        {onglet==='reseau' && (<>
+          <div style={{display:'flex',gap:'.5rem',marginBottom:'1rem',flexWrap:'wrap'}}>
+            <select value={filterNiveau} onChange={e=>setFilterNiveau(e.target.value)}
+              style={{padding:'.5rem .75rem',borderRadius:'8px',border:'1px solid var(--border)',background:'var(--card)',color:'var(--ink)',fontSize:'.83rem'}}>
+              <option value="all">Tous niveaux</option>
+              {NIVEAUX_ANIMATEUR.map(n=><option key={n.id} value={n.id}>{n.ic} {n.label}</option>)}
+            </select>
+            <div style={{fontSize:'.82rem',color:'var(--ink3)',display:'flex',alignItems:'center'}}>
+              {animateursFiltres.length} animateur(s)
+            </div>
+          </div>
+
+          {animateursFiltres.length===0 ? (
+            <div className="card" style={{textAlign:'center',padding:'2rem',color:'var(--ink3)'}}>
+              <div style={{fontSize:'2rem',marginBottom:'.5rem'}}>🏢</div>
+              <div>Aucun animateur encore — soyez le premier !</div>
+              <button className="btn btn-lime btn-sm" style={{marginTop:'1rem'}} onClick={()=>{ setModaleInscription(true); setOnglet('monprofil'); }}>Candidater</button>
+            </div>
+          ) : (
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:'1rem'}}>
+              {animateursFiltres.map((a,i)=>{
+                const niv = NIVEAUX_ANIMATEUR.find(n=>n.id===a.niveau)||NIVEAUX_ANIMATEUR[0];
+                return (
+                  <div key={a.id} className="card" style={{border:`1px solid ${i<3?niv.couleur:'var(--border)'}`}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'.6rem'}}>
+                      <div style={{display:'flex',gap:'.5rem',alignItems:'center'}}>
+                        <div style={{width:'36px',height:'36px',borderRadius:'50%',background:`linear-gradient(135deg,var(--s3),var(--s4))`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.1rem'}}>
+                          {a.user?.secteur==='elevage'?'🐄':'🌱'}
+                        </div>
+                        <div>
+                          <div style={{fontWeight:700,fontSize:'.9rem',color:'var(--ink)'}}>{a.user?.nom||'—'}</div>
+                          <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>📍 {a.user?.region}</div>
+                        </div>
+                      </div>
+                      {i<3&&<span style={{fontSize:'.72rem',fontWeight:700,padding:'.15rem .5rem',borderRadius:'99px',background:'rgba(196,154,40,.12)',color:'var(--gold2)'}}>#{i+1}</span>}
+                    </div>
+                    <div style={{display:'flex',alignItems:'center',gap:'.4rem',marginBottom:'.6rem'}}>
+                      <span style={{fontSize:'1rem'}}>{niv.ic}</span>
+                      <span style={{fontWeight:600,fontSize:'.82rem',color:niv.couleur}}>{niv.label}</span>
+                      <span style={{marginLeft:'auto',fontWeight:800,color:'var(--lime)',fontSize:'.9rem'}}>{a.points||0} pts</span>
+                    </div>
+                    <div style={{display:'flex',gap:'1rem',fontSize:'.75rem',color:'var(--ink3)'}}>
+                      <span>🤝 {a.tontines_gerees||0} tontines</span>
+                      <span>👥 {a.membres_recrutes||0} membres</span>
+                      <span>🎓 {(a.modules_completes||[]).length} modules</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>)}
+
+        {/* ═══ KPIs FRANCHISE ═══ */}
+        {onglet==='kpis' && (<>
+          <div className="card mb2" style={{background:'linear-gradient(135deg,rgba(26,122,110,.08),rgba(90,158,32,.05))'}}>
+            <div className="card-title">📊 Tableau de bord Franchise — Vision nationale</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:'1rem'}}>
+              {[
+                ['🎯','Objectif S1 2026','50 animateurs certifiés'],
+                ['📍','Couverture','14 régions Sénégal'],
+                ['💰','Modèle revenus','Commission 2–8% cotisations'],
+                ['🌍','Benchmark','Farm Shop Kenya — 92% viabilité'],
+              ].map(([ic,titre,val])=>(
+                <div key={titre} style={{padding:'.75rem',background:'rgba(255,255,255,.5)',borderRadius:'10px'}}>
+                  <div style={{fontSize:'1.4rem',marginBottom:'.3rem'}}>{ic}</div>
+                  <div style={{fontWeight:700,fontSize:'.85rem',color:'var(--ink)',marginBottom:'.2rem'}}>{titre}</div>
+                  <div style={{fontSize:'.78rem',color:'var(--ink3)'}}>{val}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* KPIs clés */}
+          <div className="g2">
+            <div>
+              <div className="card mb2">
+                <div className="card-title">📈 KPIs de performance animateur</div>
+                {[
+                  ['Taux de rétention membres','≥85%','Membres restant actifs après 3 mois'],
+                  ['Taux de ponctualité cotisations','≥90%','Cotisations payées à temps'],
+                  ['Taux de remboursement crédit','≥92%','Crédits remboursés vs octroyés'],
+                  ['NPS membres','≥8/10','Satisfaction des membres'],
+                  ['Croissance mensuelle','≥10%','Nouveaux membres/mois'],
+                  ['Modules complétés','≥6/8','Formation animateur'],
+                ].map(([kpi,cible,desc])=>(
+                  <div key={kpi} style={{padding:'.6rem 0',borderBottom:'1px solid var(--border)'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:'.15rem'}}>
+                      <span style={{fontWeight:600,fontSize:'.85rem',color:'var(--ink)'}}>{kpi}</span>
+                      <span style={{fontWeight:700,color:'var(--lime)',fontSize:'.85rem'}}>{cible}</span>
+                    </div>
+                    <div style={{fontSize:'.73rem',color:'var(--ink3)'}}>{desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="card mb2">
+                <div className="card-title">🗺 Couverture par région</div>
+                {statsReseau.parRegion.length===0 ? (
+                  <div style={{color:'var(--ink3)',fontSize:'.82rem',padding:'.5rem 0'}}>Aucun animateur encore inscrit</div>
+                ) : statsReseau.parRegion.map(([region,nb])=>(
+                  <div key={region} style={{display:'flex',justifyContent:'space-between',padding:'.4rem 0',borderBottom:'1px solid var(--border)',fontSize:'.83rem'}}>
+                    <span style={{color:'var(--ink)'}}>{region}</span>
+                    <div style={{display:'flex',gap:'.5rem',alignItems:'center'}}>
+                      <div style={{width:'60px',height:'6px',background:'var(--border)',borderRadius:'99px',overflow:'hidden'}}>
+                        <div style={{width:Math.min(100,nb*20)+'%',height:'100%',background:'var(--lime)',borderRadius:'99px'}}/>
+                      </div>
+                      <span style={{fontWeight:600,color:'var(--lime)',minWidth:'20px'}}>{nb}</span>
+                    </div>
+                  </div>
+                ))}
+                <div style={{marginTop:'.75rem',padding:'.5rem',background:'rgba(196,74,42,.06)',borderRadius:'6px',fontSize:'.75rem',color:'var(--rust2)'}}>
+                  ⚠ Régions sans animateur : {14-statsReseau.parRegion.length} — Priorité de recrutement
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card-title">💡 Stratégie de déploiement</div>
+                <div style={{fontSize:'.82rem',color:'var(--ink)',lineHeight:1.7}}>
+                  {[
+                    {phase:'Phase 1 (T1 2026)',obj:'2 animateurs/région · 28 total',ic:'🌱'},
+                    {phase:'Phase 2 (T2 2026)',obj:'5 animateurs/région · 70 total',ic:'🌿'},
+                    {phase:'Phase 3 (S2 2026)',obj:'Franchise autonome · 150 animateurs',ic:'🌾'},
+                    {phase:'Vision 2027',obj:'500 animateurs · 50 000 membres',ic:'🏆'},
+                  ].map(p=>(
+                    <div key={p.phase} style={{padding:'.45rem 0',borderBottom:'1px solid var(--border)',display:'flex',gap:'.5rem'}}>
+                      <span>{p.ic}</span>
+                      <div>
+                        <div style={{fontWeight:600,color:'var(--ink)'}}>{p.phase}</div>
+                        <div style={{fontSize:'.75rem',color:'var(--ink3)'}}>{p.obj}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>)}
+      </div>
+
+      {/* ═══ MODAL INSCRIPTION ANIMATEUR ═══ */}
+      {modaleInscription && (
+        <div className="modal-overlay" onClick={()=>setModaleInscription(false)}>
+          <div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'480px'}}>
+            <div className="modal-title">🌱 Devenir Animateur AgriTontine+</div>
+            <div style={{padding:'.75rem',background:'rgba(90,158,32,.06)',borderRadius:'8px',marginBottom:'1rem',fontSize:'.83rem',color:'var(--ink3)',lineHeight:1.6}}>
+              En tant qu'animateur, vous recrutez des agriculteurs, gérez des tontines dans votre région et recevez une commission sur chaque cotisation. Commencez par compléter la formation en ligne.
+            </div>
+            <div className="fg">
+              <label>Votre motivation (obligatoire)</label>
+              <textarea value={motivation} onChange={e=>setMotivation(e.target.value)}
+                placeholder="Pourquoi voulez-vous devenir animateur AgriTontine+ ? Quelle est votre expérience avec les tontines ou l'agriculture ?"
+                rows={4} style={{width:'100%',padding:'.6rem .75rem',borderRadius:'8px',border:'1px solid var(--border)',background:'var(--card)',color:'var(--ink)',fontSize:'.85rem',resize:'vertical',boxSizing:'border-box'}}/>
+            </div>
+            <div className="fg">
+              <label>Région d'intervention</label>
+              <input value={user.region} disabled style={{opacity:.7}}/>
+            </div>
+            <div className="frow-btns">
+              <button className="btn btn-ghost" onClick={()=>setModaleInscription(false)}>Annuler</button>
+              <button className="btn btn-lime" onClick={sInscrire}>Envoyer ma candidature →</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ MODAL MODULE FORMATION ═══ */}
+      {modaleModule && (
+        <div className="modal-overlay" onClick={()=>{ setModaleModule(null); setQuizScore(null); setQuizEnCours(null); }}>
+          <div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:'540px'}}>
+            {quizScore !== null ? (
+              /* Résultat quiz */
+              <div style={{textAlign:'center',padding:'1rem'}}>
+                <div style={{fontSize:'3rem',marginBottom:'.5rem'}}>{quizScore>=70?'🎓':'😕'}</div>
+                <div style={{fontWeight:800,fontSize:'1.2rem',color:quizScore>=70?'var(--lime)':'var(--rust2)',marginBottom:'.5rem'}}>
+                  {quizScore>=70?'Module validé !':'Score insuffisant'}
+                </div>
+                <div style={{fontSize:'1.4rem',fontWeight:900,color:'var(--ink)',marginBottom:'.25rem'}}>{quizScore}%</div>
+                <div style={{fontSize:'.82rem',color:'var(--ink3)',marginBottom:'1rem'}}>{quizScore>=70?'Félicitations ! Badge «'+modaleModule.badge+'» obtenu.':'Minimum requis : 70%. Révisez et réessayez.'}</div>
+                {quizScore>=70&&<div style={{padding:'.6rem',background:'rgba(90,158,32,.08)',borderRadius:'8px',fontSize:'.83rem',color:'var(--lime)',marginBottom:'1rem'}}>+{modaleModule.points} points ajoutés à votre profil !</div>}
+                <button className="btn btn-lime w100" onClick={()=>{ setModaleModule(null); setQuizScore(null); }}>
+                  {quizScore>=70?'Continuer la formation →':'Fermer'}
+                </button>
+              </div>
+            ) : quizEnCours ? (
+              /* Quiz */
+              <div>
+                <div className="modal-title">📝 Quiz — {modaleModule.titre}</div>
+                <div style={{fontSize:'.8rem',color:'var(--ink3)',marginBottom:'1rem'}}>5 questions · Minimum 70% pour valider</div>
+                {QUIZ_QUESTIONS.map((q,qi)=>(
+                  <div key={qi} style={{marginBottom:'1rem',padding:'.75rem',background:'var(--card2,#f5f5f5)',borderRadius:'8px'}}>
+                    <div style={{fontWeight:600,fontSize:'.85rem',marginBottom:'.5rem'}}>{qi+1}. {q.q}</div>
+                    <div style={{display:'flex',flexDirection:'column',gap:'.3rem'}}>
+                      {q.opts.map((opt,oi)=>(
+                        <div key={oi} style={{padding:'.35rem .6rem',borderRadius:'6px',fontSize:'.82rem',
+                          background:oi===q.rep?'rgba(90,158,32,.1)':'transparent',
+                          color:oi===q.rep?'var(--lime)':'var(--ink3)',
+                          border:oi===q.rep?'1px solid rgba(90,158,32,.3)':'1px solid transparent'}}>
+                          {String.fromCharCode(65+oi)}. {opt}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <div className="frow-btns">
+                  <button className="btn btn-ghost" onClick={()=>setQuizEnCours(false)}>Retour</button>
+                  <button className="btn btn-lime" onClick={()=>terminerModule(modaleModule)}>Soumettre le quiz</button>
+                </div>
+              </div>
+            ) : (
+              /* Contenu module */
+              <div>
+                <div style={{display:'flex',gap:'1rem',alignItems:'center',marginBottom:'1rem'}}>
+                  <div style={{fontSize:'2.5rem'}}>{modaleModule.ic}</div>
+                  <div>
+                    <div className="modal-title" style={{marginBottom:'.2rem'}}>{modaleModule.titre}</div>
+                    <div style={{fontSize:'.78rem',color:'var(--ink3)'}}>⏱ {modaleModule.duree} · 🏅 {modaleModule.badge}</div>
+                  </div>
+                </div>
+                <div style={{fontSize:'.85rem',color:'var(--ink3)',marginBottom:'1rem',lineHeight:1.6}}>{modaleModule.description}</div>
+                <div style={{marginBottom:'1.25rem'}}>
+                  <div style={{fontWeight:600,fontSize:'.85rem',marginBottom:'.5rem'}}>📋 Au programme :</div>
+                  {modaleModule.chapitres.map((ch,i)=>(
+                    <div key={i} style={{display:'flex',gap:'.5rem',padding:'.35rem 0',borderBottom:'1px solid var(--border)',fontSize:'.83rem',color:'var(--ink)'}}>
+                      <span style={{color:'var(--lime)',fontWeight:600}}>{i+1}.</span> {ch}
+                    </div>
+                  ))}
+                </div>
+                <div style={{padding:'.6rem',background:'rgba(196,154,40,.08)',borderRadius:'8px',fontSize:'.78rem',color:'var(--gold2)',marginBottom:'1rem'}}>
+                  ⏱ Ce module dure {modaleModule.duree} · +{modaleModule.points} points après validation du quiz
+                </div>
+                <div className="frow-btns">
+                  <button className="btn btn-ghost" onClick={()=>setModaleModule(null)}>Fermer</button>
+                  {modulesCompletes.includes(modaleModule.id)
+                    ? <button className="btn btn-ghost" style={{color:'var(--lime)',borderColor:'var(--lime)'}} disabled>✅ Déjà complété</button>
+                    : <button className="btn btn-lime" onClick={()=>setQuizEnCours(true)}>Commencer le quiz →</button>
+                  }
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 function Login({onLogin}){
   const [tab,setTab]=useState('paysan');
   const [f,setF]=useState({nom:'',tel:'',village:'',region:'Dakar',secteur:'agriculture',role:'paysan'});
@@ -4827,6 +5560,7 @@ function App(){
     {id:'rapport',ic:'📄',label:'Rapport Mensuel'},
     {id:'recherche',ic:'🔍',label:'Recherche'},
     {id:'parrainage',ic:'🎁',label:'Parrainage'},
+    {id:'franchise',ic:'🏢',label:'Réseau Franchise'},
     {id:'profil',ic:'👤',label:'Mon profil'},
   ];
 
@@ -4849,6 +5583,7 @@ function App(){
     rapport:<RapportMensuel user={user} tontines={tontines} projets={projets} toast={toast}/>,
     recherche:<RechercheGlobale user={user} tontines={tontines} projets={projets} setPage={setPage} toast={toast}/>,
     parrainage:<Parrainage user={user} toast={toast}/>,
+    franchise:<FranchiseSociale user={user} tontines={tontines} toast={toast}/>,
     profil:<Profil user={user} setUser={setUserWrapper} toast={toast}/>,
   };
 
