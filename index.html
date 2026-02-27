@@ -4014,6 +4014,505 @@ function Parametres({user, setUser, toast}) {
   );
 }
 
+
+/* ══════════════════════════════════════════════════════
+   RAPPORT MENSUEL — PDF exportable
+══════════════════════════════════════════════════════ */
+function RapportMensuel({user, tontines, projets, toast}) {
+  const score = calcScore(user);
+  const mesTontines = tontines.filter(t=>t.membres.some(m=>m.uid===user.id));
+  const now = new Date();
+  const moisCourant = now.toLocaleString('fr-FR',{month:'long',year:'numeric'});
+  const [periode, setPeriode] = React.useState('mois');
+
+  // Calculs stats
+  const cotisPayees = (user.cotisations||[]).filter(c=>c.statut==='payee');
+  const cotisRetard = (user.cotisations||[]).filter(c=>c.statut==='retard');
+  const totalCotis = cotisPayees.reduce((s,c)=>s+(c.montant||0),0);
+  const creditsActifs = (user.credits||[]).filter(c=>c.statut==='approuve');
+  const creditsRembourses = (user.credits||[]).filter(c=>c.statut==='rembourse');
+  const totalEmprunte = (user.credits||[]).reduce((s,c)=>s+(c.montant||0),0);
+  const totalInvesti = (user.investissements||[]).reduce((s,i)=>s+(i.montant||0),0);
+  const retourAttendu = (user.investissements||[]).reduce((s,i)=>s+(i.retourAttendu||0),0);
+  const tauxPonctualite = (user.cotisations||[]).length>0 ? Math.round(cotisPayees.length/(user.cotisations||[]).length*100) : 100;
+
+  const imprimer = () => {
+    window.print();
+    toast('Impression/export PDF lancé !');
+  };
+
+  const prix = (n) => (n||0).toLocaleString('fr-FR')+' FCFA';
+
+  const StatCard = ({ic,val,lbl,col}) => (
+    <div style={{padding:'.75rem',background:col?`rgba(${col},.08)`:'var(--card2,#f5f5f5)',borderRadius:'10px',textAlign:'center',border:col?`1px solid rgba(${col},.2)`:'none'}}>
+      <div style={{fontSize:'1.3rem'}}>{ic}</div>
+      <div style={{fontWeight:800,fontSize:'1.1rem',color:col?`rgba(${col},1)`:'var(--ink)',margin:'.2rem 0'}}>{val}</div>
+      <div style={{fontSize:'.7rem',color:'var(--ink3)'}}>{lbl}</div>
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-tag">Rapport</div>
+        <div className="ph-title">📄 Rapport Mensuel</div>
+        <div className="ph-sub">Synthèse de votre activité · {moisCourant}</div>
+      </div>
+      <div className="content">
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.25rem',flexWrap:'wrap',gap:'.5rem'}}>
+          <div style={{display:'flex',gap:'.4rem'}}>
+            {[['mois','Ce mois'],['trimestre','Trimestre'],['annee','Année']].map(([val,lbl])=>(
+              <div key={val} onClick={()=>setPeriode(val)} style={{padding:'.35rem .75rem',borderRadius:'99px',cursor:'pointer',fontSize:'.8rem',fontWeight:periode===val?700:400,
+                background:periode===val?'var(--lime)':'var(--card)',color:periode===val?'#fff':'var(--ink3)',border:'1px solid '+(periode===val?'var(--lime)':'var(--border)')}}>
+                {lbl}
+              </div>
+            ))}
+          </div>
+          <button className="btn btn-lime btn-sm" onClick={imprimer}>🖨 Exporter PDF</button>
+        </div>
+
+        {/* En-tête rapport */}
+        <div className="card mb2" style={{background:'linear-gradient(135deg,rgba(90,158,32,.1),rgba(26,122,110,.06))',border:'1px solid rgba(90,158,32,.2)'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:'1rem'}}>
+            <div>
+              <div style={{fontWeight:800,fontSize:'1.3rem',color:'var(--ink)'}}>{user.nom}</div>
+              <div style={{fontSize:'.83rem',color:'var(--ink3)',marginTop:'.2rem'}}>📍 {user.village}, {user.region} · {SECTEURS.find(s=>s.id===user.secteur)?.ic} {SECTEURS.find(s=>s.id===user.secteur)?.label}</div>
+              <div style={{fontSize:'.78rem',color:'var(--ink4)',marginTop:'.1rem'}}>Membre depuis {user.dateInscription}</div>
+            </div>
+            <div style={{textAlign:'center'}}>
+              <ScoreRing score={score} sz={80} fsz="1.2rem"/>
+              <div style={{fontSize:'.72rem',color:'var(--ink3)',marginTop:'.3rem'}}>Score IA</div>
+            </div>
+          </div>
+        </div>
+
+        {/* KPIs */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))',gap:'.75rem',marginBottom:'1.5rem'}}>
+          <StatCard ic="🤝" val={mesTontines.length} lbl="Tontines actives" col="90,158,32"/>
+          <StatCard ic="💸" val={prix(totalCotis)} lbl="Cotisations payées" col="90,158,32"/>
+          <StatCard ic="📊" val={tauxPonctualite+'%'} lbl="Taux ponctualité" col={tauxPonctualite>=90?'90,158,32':tauxPonctualite>=70?'196,154,40':'196,74,42'}/>
+          <StatCard ic="🌱" val={prix(totalEmprunte)} lbl="Total emprunté"/>
+          <StatCard ic="💼" val={prix(totalInvesti)} lbl="Total investi" col="196,154,40"/>
+          <StatCard ic="📈" val={prix(retourAttendu)} lbl="Retours attendus" col="90,158,32"/>
+        </div>
+
+        <div className="g2">
+          {/* Tontines détail */}
+          <div>
+            <div className="card mb2">
+              <div className="card-title">🤝 Mes Tontines</div>
+              {mesTontines.length===0 ? <div style={{color:'var(--ink3)',fontSize:'.83rem'}}>Aucune tontine</div>
+              : mesTontines.map(t=>{
+                const monTour = t.membres.find(m=>m.uid===user.id);
+                const cotisT = (user.cotisations||[]).filter(c=>c.tontineId===t.id);
+                const payeesT = cotisT.filter(c=>c.statut==='payee');
+                return (
+                  <div key={t.id} style={{padding:'.65rem 0',borderBottom:'1px solid var(--border)'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'.2rem'}}>
+                      <span style={{fontWeight:600,fontSize:'.88rem'}}>{t.nom}</span>
+                      <span className={`chip ${t.statut==='actif'?'ch-lime':'ch-gray'}`} style={{fontSize:'.68rem'}}>{t.statut}</span>
+                    </div>
+                    <div style={{fontSize:'.75rem',color:'var(--ink3)',display:'flex',gap:'1rem',flexWrap:'wrap'}}>
+                      <span>Tour #{monTour?.tour||'?'}</span>
+                      <span>{payeesT.length}/{cotisT.length} cotisations</span>
+                      <span>💰 {prix(payeesT.reduce((s,c)=>s+c.montant,0))}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Crédits */}
+            <div className="card">
+              <div className="card-title">🌱 Historique Crédits</div>
+              {(user.credits||[]).length===0 ? <div style={{color:'var(--ink3)',fontSize:'.83rem'}}>Aucun crédit</div>
+              : (user.credits||[]).map(c=>(
+                <div key={c.id} style={{padding:'.55rem 0',borderBottom:'1px solid var(--border)'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <span style={{fontWeight:600,fontSize:'.85rem'}}>{prix(c.montant)}</span>
+                    <span style={{fontSize:'.72rem',fontWeight:700,padding:'.15rem .5rem',borderRadius:'99px',
+                      background:c.statut==='rembourse'?'rgba(90,158,32,.12)':'rgba(196,154,40,.12)',
+                      color:c.statut==='rembourse'?'var(--lime)':'var(--gold2)'}}>
+                      {c.statut==='rembourse'?'✅ Remboursé':'🔄 En cours'}
+                    </span>
+                  </div>
+                  <div style={{fontSize:'.74rem',color:'var(--ink3)',marginTop:'.15rem'}}>{c.intrant} · Échéance: {c.dateEcheance||'—'}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Investissements + Conseils */}
+          <div>
+            <div className="card mb2">
+              <div className="card-title">💼 Investissements</div>
+              {(user.investissements||[]).length===0 ? <div style={{color:'var(--ink3)',fontSize:'.83rem'}}>Aucun investissement</div>
+              : (user.investissements||[]).map((inv,i)=>{
+                const proj = projets.find(p=>p.id===inv.projetId);
+                return (
+                  <div key={i} style={{padding:'.55rem 0',borderBottom:'1px solid var(--border)'}}>
+                    <div style={{fontWeight:600,fontSize:'.85rem',marginBottom:'.2rem'}}>{proj?.nom||'Projet #'+i}</div>
+                    <div style={{fontSize:'.75rem',color:'var(--ink3)',display:'flex',gap:'1rem',flexWrap:'wrap'}}>
+                      <span>Investi: <strong style={{color:'var(--gold2)'}}>{prix(inv.montant)}</strong></span>
+                      <span>Retour: <strong style={{color:'var(--lime)'}}>+{prix(inv.retourAttendu)}</strong></span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="card mb2" style={{background:'rgba(90,158,32,.06)',border:'1px solid rgba(90,158,32,.2)'}}>
+              <div className="card-title">💡 Recommandations IA</div>
+              <div style={{display:'flex',flexDirection:'column',gap:'.6rem',fontSize:'.82rem'}}>
+                {tauxPonctualite<100&&<div style={{padding:'.5rem',background:'rgba(196,74,42,.06)',borderRadius:'6px',color:'var(--rust2)'}}>⚠ {cotisRetard.length} retard(s) — Payez à temps pour préserver votre score</div>}
+                {score>=40&&creditsActifs.length===0&&<div style={{padding:'.5rem',background:'rgba(26,122,110,.06)',borderRadius:'6px',color:'var(--teal2)'}}>🌱 Vous êtes éligible à un crédit jusqu’à {prix(score*1000)}</div>}
+                {mesTontines.length<3&&<div style={{padding:'.5rem',background:'rgba(196,154,40,.06)',borderRadius:'6px',color:'var(--gold2)'}}>🤝 Rejoignez 1 tontine de plus pour booster votre score (+2.4 pts)</div>}
+                {(user.investissements||[]).length===0&&<div style={{padding:'.5rem',background:'rgba(90,158,32,.06)',borderRadius:'6px',color:'var(--lime)'}}>💼 Investissez dans un projet agricole pour diversifier vos revenus</div>}
+                {score>=80&&<div style={{padding:'.5rem',background:'rgba(90,158,32,.06)',borderRadius:'6px',color:'var(--lime)'}}>🌟 Score excellent ! Vous êtes éligible au taux préférentiel de 3%/an</div>}
+              </div>
+            </div>
+
+            <div className="card" style={{background:'rgba(26,122,110,.06)',border:'1px solid rgba(26,122,110,.2)'}}>
+              <div className="card-title" style={{color:'var(--teal2)'}}>🎯 Objectifs pour le prochain mois</div>
+              <div style={{fontSize:'.82rem',color:'var(--ink)',lineHeight:1.7}}>
+                {[
+                  cotisRetard.length>0 && '✓ Régulariser '+cotisRetard.length+' cotisation(s) en retard',
+                  score<65 && '✓ Atteindre 65 pts de score (actuellement '+score+')',
+                  creditsActifs.length>0 && '✓ Suivre le remboursement de votre crédit en cours',
+                  '✓ Consulter le marché cadran pour optimiser vos ventes',
+                  '✓ Vérifier le calendrier cultural pour la prochaine saison',
+                ].filter(Boolean).map((o,i)=><div key={i}>{o}</div>)}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   RECHERCHE GLOBALE
+══════════════════════════════════════════════════════ */
+function RechercheGlobale({user, tontines, projets, setPage, toast}) {
+  const [q, setQ] = React.useState('');
+  const [resultats, setResultats] = React.useState(null);
+  const [loading, setLoading] = React.useState(false);
+
+  const rechercher = async (query) => {
+    if (!query || query.length < 2) { setResultats(null); return; }
+    setLoading(true);
+    // Recherche locale
+    const rTontines = tontines.filter(t=>
+      t.nom.toLowerCase().includes(query.toLowerCase()) ||
+      t.region.toLowerCase().includes(query.toLowerCase()) ||
+      t.secteur.toLowerCase().includes(query.toLowerCase())
+    );
+    const rProjets = projets.filter(p=>
+      p.nom.toLowerCase().includes(query.toLowerCase()) ||
+      (p.promoteur||'').toLowerCase().includes(query.toLowerCase()) ||
+      p.region.toLowerCase().includes(query.toLowerCase())
+    );
+    // Recherche en DB
+    const [usersRes, annoncesRes] = await Promise.all([
+      sb.from('users').select('id,nom,village,region,secteur').ilike('nom','%'+query+'%').limit(5),
+      sb.from('annonces').select('id,produit,region,prix_unitaire,unite,type').ilike('produit','%'+query+'%').eq('statut','active').limit(5),
+    ]);
+    setResultats({
+      tontines: rTontines.slice(0,5),
+      projets: rProjets.slice(0,5),
+      users: usersRes.data||[],
+      annonces: annoncesRes.data||[],
+      total: rTontines.length + rProjets.length + (usersRes.data||[]).length + (annoncesRes.data||[]).length,
+    });
+    setLoading(false);
+  };
+
+  React.useEffect(()=>{
+    const t = setTimeout(()=>rechercher(q),350);
+    return ()=>clearTimeout(t);
+  },[q,tontines,projets]);
+
+  const ResultSection = ({titre,items,renderItem}) => items.length===0?null:(
+    <div style={{marginBottom:'1.25rem'}}>
+      <div style={{fontWeight:700,fontSize:'.8rem',color:'var(--ink3)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:'.5rem'}}>{titre}</div>
+      <div style={{display:'flex',flexDirection:'column',gap:'.4rem'}}>{items.map(renderItem)}</div>
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-tag">Recherche</div>
+        <div className="ph-title">🔍 Recherche Globale</div>
+        <div className="ph-sub">Tontines · Projets · Membres · Annonces</div>
+      </div>
+      <div className="content">
+        <div style={{position:'relative',marginBottom:'1.5rem'}}>
+          <input
+            autoFocus
+            value={q} onChange={e=>setQ(e.target.value)}
+            placeholder="Recherchez une tontine, un projet, un membre, un produit..."
+            style={{width:'100%',padding:'.85rem 1rem .85rem 3rem',borderRadius:'12px',border:'2px solid var(--lime)',
+              background:'var(--card)',color:'var(--ink)',fontSize:'1rem',boxSizing:'border-box'}}/>
+          <span style={{position:'absolute',left:'1rem',top:'50%',transform:'translateY(-50%)',fontSize:'1.2rem'}}>🔍</span>
+          {q&&<span onClick={()=>setQ('')} style={{position:'absolute',right:'1rem',top:'50%',transform:'translateY(-50%)',cursor:'pointer',color:'var(--ink3)',fontSize:'1.1rem'}}>✕</span>}
+        </div>
+
+        {!q && (
+          <div style={{textAlign:'center',padding:'2rem',color:'var(--ink3)'}}>
+            <div style={{fontSize:'3rem',marginBottom:'.75rem'}}>🔍</div>
+            <div style={{fontWeight:600,marginBottom:'.4rem'}}>Recherchez dans toute la plateforme</div>
+            <div style={{fontSize:'.82rem'}}>Tontines, projets d'investissement, membres, annonces du marché</div>
+            <div style={{display:'flex',gap:'.5rem',justifyContent:'center',flexWrap:'wrap',marginTop:'1rem'}}>
+              {['Arachide','Tontine Dakar','Projet Thiès','Bovins','Maïs'].map(s=>(
+                <div key={s} onClick={()=>setQ(s)} className="chip ch-gray" style={{cursor:'pointer',fontSize:'.8rem'}}>🔍 {s}</div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {loading && <div style={{textAlign:'center',padding:'1rem',color:'var(--ink3)'}}>⏳ Recherche...</div>}
+
+        {resultats && !loading && (<>
+          <div style={{marginBottom:'1rem',fontSize:'.83rem',color:'var(--ink3)'}}>
+            {resultats.total} résultat(s) pour <strong style={{color:'var(--ink)'}}>&quot;{q}&quot;</strong>
+          </div>
+
+          {resultats.total===0 && (
+            <div className="card" style={{textAlign:'center',padding:'2rem',color:'var(--ink3)'}}>
+              <div style={{fontSize:'2rem',marginBottom:'.5rem'}}>😕</div>
+              <div>Aucun résultat pour &quot;{q}&quot;</div>
+              <div style={{fontSize:'.8rem',marginTop:'.4rem'}}>Essayez un autre terme ou vérifiez l’orthographe</div>
+            </div>
+          )}
+
+          <ResultSection titre={`🤝 Tontines (${resultats.tontines.length})`} items={resultats.tontines} renderItem={t=>(
+            <div key={t.id} className="card" style={{padding:'.75rem',cursor:'pointer'}} onClick={()=>setPage('tontines')}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <div>
+                  <div style={{fontWeight:600,fontSize:'.9rem'}}>{t.nom}</div>
+                  <div style={{fontSize:'.75rem',color:'var(--ink3)'}}>📍 {t.region} · {t.membres.length}/{t.nbMax} membres · {(t.montantCotis||0).toLocaleString('fr-FR')} FCFA</div>
+                </div>
+                <span className={`chip ${SECTEURS.find(s=>s.id===t.secteur)?.cls||'ch-gray'}`} style={{fontSize:'.68rem'}}>{t.secteur}</span>
+              </div>
+            </div>
+          )}/>
+
+          <ResultSection titre={`💼 Projets (${resultats.projets.length})`} items={resultats.projets} renderItem={p=>(
+            <div key={p.id} className="card" style={{padding:'.75rem',cursor:'pointer'}} onClick={()=>setPage('investissement')}>
+              <div style={{fontWeight:600,fontSize:'.9rem',marginBottom:'.2rem'}}>{p.nom}</div>
+              <div style={{fontSize:'.75rem',color:'var(--ink3)',display:'flex',gap:'1rem',flexWrap:'wrap'}}>
+                <span>📍 {p.region}</span>
+                <span>🎯 {(p.objectif||0).toLocaleString('fr-FR')} FCFA</span>
+                <span style={{color:'var(--lime)'}}>{p.rendementAnnuel}%/an</span>
+              </div>
+            </div>
+          )}/>
+
+          <ResultSection titre={`👤 Membres (${resultats.users.length})`} items={resultats.users} renderItem={u=>(
+            <div key={u.id} className="card" style={{padding:'.75rem',cursor:'pointer'}} onClick={()=>setPage('messagerie')}>
+              <div style={{display:'flex',alignItems:'center',gap:'.75rem'}}>
+                <div style={{width:'36px',height:'36px',borderRadius:'50%',background:'linear-gradient(135deg,var(--s3),var(--s4))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.1rem'}}>
+                  {u.secteur==='elevage'?'🐄':u.secteur==='mixte'?'🌾':'🌱'}
+                </div>
+                <div>
+                  <div style={{fontWeight:600,fontSize:'.9rem'}}>{u.nom}</div>
+                  <div style={{fontSize:'.75rem',color:'var(--ink3)'}}>📍 {u.village||''} {u.region}</div>
+                </div>
+                <span style={{marginLeft:'auto',fontSize:'.72rem',color:'var(--teal2)'}}>💬 Contacter</span>
+              </div>
+            </div>
+          )}/>
+
+          <ResultSection titre={`🛒 Annonces marché (${resultats.annonces.length})`} items={resultats.annonces} renderItem={a=>(
+            <div key={a.id} className="card" style={{padding:'.75rem',cursor:'pointer'}} onClick={()=>setPage('marche')}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <div>
+                  <div style={{fontWeight:600,fontSize:'.9rem'}}>{a.produit}</div>
+                  <div style={{fontSize:'.75rem',color:'var(--ink3)'}}>📍 {a.region} · {(a.prix_unitaire||0).toLocaleString('fr-FR')} FCFA/{a.unite}</div>
+                </div>
+                <span style={{fontSize:'.72rem',fontWeight:700,padding:'.2rem .5rem',borderRadius:'99px',
+                  background:a.type==='vente'?'rgba(90,158,32,.12)':'rgba(21,101,192,.12)',
+                  color:a.type==='vente'?'var(--lime)':'#42a5f5'}}>
+                  {a.type==='vente'?'VENTE':'ACHAT'}
+                </span>
+              </div>
+            </div>
+          )}/>
+        </>)}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   PARRAINAGE & POINTS DE FIDÉLITÉ
+══════════════════════════════════════════════════════ */
+function Parrainage({user, toast}) {
+  const score = calcScore(user);
+  const codeParrainage = 'AGT-' + (user.nom||'').toUpperCase().slice(0,3) + '-' + (user.id||'').slice(0,4).toUpperCase();
+  const [filleuls, setFilleuls] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [points, setPoints] = React.useState(0);
+
+  React.useEffect(()=>{ loadFilleuls(); },[]);
+
+  const loadFilleuls = async () => {
+    setLoading(true);
+    const {data} = await sb.from('users').select('id,nom,region,secteur,created_at').eq('parrain_id',user.id);
+    const filleulsList = data||[];
+    setFilleuls(filleulsList);
+    setPoints(filleulsList.length * 50 + score * 2);
+    setLoading(false);
+  };
+
+  const copierCode = () => {
+    navigator.clipboard.writeText(codeParrainage).then(()=>toast('✅ Code copié !'));
+  };
+
+  const partagerWhatsApp = () => {
+    const msg = encodeURIComponent('Rejoins AgriTontine+ avec mon code ' + codeParrainage + ' ! La plateforme des tontines agricoles au Sénégal. https://agritontineplus.vercel.app');
+    window.open('https://wa.me/?text='+msg,'_blank');
+  };
+
+  const NIVEAUX = [
+    {min:0,   max:99,  label:'Semence',    ic:'🌱', couleur:'var(--ink3)',   avantage:'Accès plateforme'},
+    {min:100, max:299, label:'Pousse',     ic:'🌿', couleur:'var(--teal2)', avantage:'-1% sur taux crédit'},
+    {min:300, max:599, label:'Récolte',    ic:'🌾', couleur:'var(--gold2)', avantage:'-2% + priorité crédit'},
+    {min:600, max:999, label:'Grenier',    ic:'🏺', couleur:'var(--lime)',   avantage:'-3% + plafond +20%'},
+    {min:1000,max:9999,label:'Champion',   ic:'🏆', couleur:'var(--amber2,#f59f00)', avantage:'Taux 1% + ambassadeur'},
+  ];
+  const niveauActuel = NIVEAUX.filter(n=>points>=n.min).pop()||NIVEAUX[0];
+  const niveauSuivant = NIVEAUX.find(n=>n.min>points);
+  const pctProgression = niveauSuivant ? Math.round((points-niveauActuel.min)/(niveauSuivant.min-niveauActuel.min)*100) : 100;
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-tag">Parrainage</div>
+        <div className="ph-title">🎁 Parrainage & Fidélité</div>
+        <div className="ph-sub">Invitez des agriculteurs · Gagnez des points · Obtenez des avantages</div>
+      </div>
+      <div className="content">
+        <div className="g2">
+          {/* Code + partage */}
+          <div>
+            <div className="card mb2" style={{background:'linear-gradient(135deg,rgba(90,158,32,.1),rgba(26,122,110,.06))',border:'1px solid rgba(90,158,32,.25)'}}>
+              <div className="card-title">🎫 Votre code de parrainage</div>
+              <div style={{display:'flex',alignItems:'center',gap:'.75rem',padding:'.75rem',background:'var(--card)',borderRadius:'10px',marginBottom:'1rem'}}>
+                <div style={{fontFamily:'var(--f-m,monospace)',fontSize:'1.4rem',fontWeight:900,color:'var(--lime)',letterSpacing:'.1em',flex:1}}>{codeParrainage}</div>
+                <button className="btn btn-ghost btn-sm" onClick={copierCode}>📋 Copier</button>
+              </div>
+              <div style={{display:'flex',gap:'.5rem',flexWrap:'wrap'}}>
+                <button className="btn btn-lime" style={{flex:1,justifyContent:'center'}} onClick={partagerWhatsApp}>
+                  💚 Partager WhatsApp
+                </button>
+                <button className="btn btn-ghost" style={{flex:1,justifyContent:'center'}}
+                  onClick={()=>{ navigator.share?.({title:'AgriTontine+',text:'Rejoins AgriTontine+ !',url:'https://agritontineplus.vercel.app'})||toast('Partagez ce lien : agritontineplus.vercel.app'); }}>
+                  📤 Partager
+                </button>
+              </div>
+              <div style={{marginTop:'.75rem',padding:'.5rem',background:'rgba(196,154,40,.08)',borderRadius:'6px',fontSize:'.78rem',color:'var(--gold2)'}}>
+                💰 Gagnez <strong>50 points</strong> par ami parrainé · Les points améliorent votre accès aux crédits
+              </div>
+            </div>
+
+            {/* Filleuls */}
+            <div className="card">
+              <div className="card-title">👥 Mes filleuls ({filleuls.length})</div>
+              {loading ? <div style={{color:'var(--ink3)',fontSize:'.82rem'}}>⏳ Chargement...</div>
+              : filleuls.length===0 ? (
+                <div style={{textAlign:'center',padding:'1.5rem',color:'var(--ink3)'}}>
+                  <div style={{fontSize:'2rem',marginBottom:'.5rem'}}>👥</div>
+                  <div style={{fontSize:'.83rem'}}>Pas encore de filleul</div>
+                  <div style={{fontSize:'.75rem',marginTop:'.3rem'}}>Partagez votre code pour commencer</div>
+                </div>
+              ) : filleuls.map(f=>(
+                <div key={f.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'.5rem 0',borderBottom:'1px solid var(--border)'}}>
+                  <div style={{display:'flex',gap:'.5rem',alignItems:'center'}}>
+                    <div style={{width:'30px',height:'30px',borderRadius:'50%',background:'linear-gradient(135deg,var(--s3),var(--s4))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'.9rem'}}>
+                      {f.secteur==='elevage'?'🐄':'🌱'}
+                    </div>
+                    <div>
+                      <div style={{fontWeight:600,fontSize:'.85rem'}}>{f.nom}</div>
+                      <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>{f.region}</div>
+                    </div>
+                  </div>
+                  <span style={{fontWeight:700,color:'var(--lime)',fontSize:'.82rem'}}>+50 pts</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Niveaux fidélité */}
+          <div>
+            <div className="card mb2">
+              <div className="card-title">🏆 Niveau de fidélité</div>
+              <div style={{textAlign:'center',marginBottom:'1.25rem'}}>
+                <div style={{fontSize:'3rem',marginBottom:'.3rem'}}>{niveauActuel.ic}</div>
+                <div style={{fontWeight:800,fontSize:'1.4rem',color:niveauActuel.couleur}}>{niveauActuel.label}</div>
+                <div style={{fontWeight:900,fontSize:'2rem',color:'var(--lime)',margin:'.25rem 0'}}>{points} pts</div>
+                {niveauSuivant&&(
+                  <>
+                    <div style={{height:'8px',background:'var(--border)',borderRadius:'99px',overflow:'hidden',margin:'.5rem 0'}}>
+                      <div style={{width:pctProgression+'%',height:'100%',background:'var(--lime)',borderRadius:'99px',transition:'.5s'}}/>
+                    </div>
+                    <div style={{fontSize:'.75rem',color:'var(--ink3)'}}>{niveauSuivant.min-points} pts pour {niveauSuivant.ic} {niveauSuivant.label}</div>
+                  </>
+                )}
+              </div>
+              <div style={{padding:'.6rem',background:'rgba(90,158,32,.08)',borderRadius:'8px',textAlign:'center',fontSize:'.83rem'}}>
+                <strong style={{color:'var(--lime)'}}>Avantage actuel :</strong> {niveauActuel.avantage}
+              </div>
+            </div>
+
+            {/* Tableau niveaux */}
+            <div className="card">
+              <div className="card-title">📊 Tous les niveaux</div>
+              {NIVEAUX.map(n=>(
+                <div key={n.label} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'.55rem 0',borderBottom:'1px solid var(--border)',
+                  opacity:points>=n.min?1:.5,fontWeight:niveauActuel.label===n.label?700:400}}>
+                  <div style={{display:'flex',gap:'.5rem',alignItems:'center'}}>
+                    <span style={{fontSize:'1.2rem'}}>{n.ic}</span>
+                    <div>
+                      <div style={{fontSize:'.88rem',color:niveauActuel.label===n.label?n.couleur:'var(--ink)'}}>{n.label}</div>
+                      <div style={{fontSize:'.72rem',color:'var(--ink3)'}}>{n.min}–{n.max} pts</div>
+                    </div>
+                  </div>
+                  <div style={{textAlign:'right'}}>
+                    <div style={{fontSize:'.75rem',color:n.couleur,fontWeight:600}}>{n.avantage}</div>
+                    {niveauActuel.label===n.label&&<div style={{fontSize:'.68rem',color:'var(--lime)'}}>← Niveau actuel</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Comment gagner des points */}
+            <div className="card mt2">
+              <div className="card-title">💡 Comment gagner des points</div>
+              {[
+                ['🤝','Rejoindre une tontine','+30 pts'],
+                ['💸','Cotisation à temps','+5 pts'],
+                ['💼','Investir dans un projet','+20 pts'],
+                ['👥','Parrainer un ami','+50 pts'],
+                ['🌱','Rembourser un crédit','+40 pts'],
+                ['🛒','Publier une annonce','+10 pts'],
+                ['📊','Score IA','score×2 pts'],
+              ].map(([ic,lbl,pts])=>(
+                <div key={lbl} style={{display:'flex',justifyContent:'space-between',padding:'.4rem 0',borderBottom:'1px solid var(--border)',fontSize:'.82rem'}}>
+                  <span>{ic} {lbl}</span>
+                  <span style={{fontWeight:700,color:'var(--lime)'}}>{pts}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Login({onLogin}){
   const [tab,setTab]=useState('paysan');
   const [f,setF]=useState({nom:'',tel:'',village:'',region:'Dakar',secteur:'agriculture',role:'paysan'});
@@ -4325,6 +4824,9 @@ function App(){
     {id:'notifications',ic:'🔔',label:'Notifications',dot:null,dotCls:'dot-red'},
     {id:'simulateur',ic:'🧮',label:'Simulateur Crédit'},
     {id:'parametres',ic:'⚙️',label:'Paramètres'},
+    {id:'rapport',ic:'📄',label:'Rapport Mensuel'},
+    {id:'recherche',ic:'🔍',label:'Recherche'},
+    {id:'parrainage',ic:'🎁',label:'Parrainage'},
     {id:'profil',ic:'👤',label:'Mon profil'},
   ];
 
@@ -4344,6 +4846,9 @@ function App(){
     notifications:<Notifications user={user} toast={toast}/>,
     simulateur:<SimulateurCredit user={user} tontines={tontines} toast={toast}/>,
     parametres:<Parametres user={user} setUser={setUserWrapper} toast={toast}/>,
+    rapport:<RapportMensuel user={user} tontines={tontines} projets={projets} toast={toast}/>,
+    recherche:<RechercheGlobale user={user} tontines={tontines} projets={projets} setPage={setPage} toast={toast}/>,
+    parrainage:<Parrainage user={user} toast={toast}/>,
     profil:<Profil user={user} setUser={setUserWrapper} toast={toast}/>,
   };
 
